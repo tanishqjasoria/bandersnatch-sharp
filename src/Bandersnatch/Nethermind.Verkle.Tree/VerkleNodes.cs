@@ -12,7 +12,7 @@ public enum NodeType : byte
     StemNode = 2
 }
 
-public readonly struct SuffixTree
+public class SuffixTree
 {
     private byte[] Stem { get; }
     private Commitment C1 { get; }
