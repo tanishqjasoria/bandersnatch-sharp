@@ -24,7 +24,7 @@ public class ColumnsDb<T> : DbOnTheRocks, IColumnsDb<T> where T : struct, Enum
 {
     private readonly IDictionary<T, IDbWithSpan> _columnDbs = new Dictionary<T, IDbWithSpan>();
 
-    public ColumnsDb(string basePath, RocksDbSettings settings, IDbConfig dbConfig, IReadOnlyList<T> keys)
+    public ColumnsDb(string basePath, DbSettings settings, IDbConfig dbConfig, IReadOnlyList<T> keys)
         : base(basePath, settings, dbConfig, GetColumnFamilies(dbConfig, settings.DbName, GetEnumKeys(keys)))
     {
         keys = GetEnumKeys(keys);

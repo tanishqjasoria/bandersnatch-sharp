@@ -30,11 +30,11 @@ public class RocksDbFactory : IRocksDbFactory
         _basePath = basePath;
     }
 
-    public IDb CreateDb(RocksDbSettings rocksDbSettings) =>
-        new DbOnTheRocks(_basePath, rocksDbSettings, _dbConfig);
+    public IDb CreateDb(DbSettings dbSettings) =>
+        new DbOnTheRocks(_basePath, dbSettings, _dbConfig);
 
-    public IColumnsDb<T> CreateColumnsDb<T>(RocksDbSettings rocksDbSettings) where T : struct, Enum =>
-        new ColumnsDb<T>(_basePath, rocksDbSettings, _dbConfig, Array.Empty<T>());
+    public IColumnsDb<T> CreateColumnsDb<T>(DbSettings dbSettings) where T : struct, Enum =>
+        new ColumnsDb<T>(_basePath, dbSettings, _dbConfig, Array.Empty<T>());
 
-    public string GetFullDbPath(RocksDbSettings rocksDbSettings) => DbOnTheRocks.GetFullDbPath(rocksDbSettings.DbPath, _basePath);
+    public string GetFullDbPath(DbSettings dbSettings) => DbOnTheRocks.GetFullDbPath(dbSettings.DbPath, _basePath);
 }

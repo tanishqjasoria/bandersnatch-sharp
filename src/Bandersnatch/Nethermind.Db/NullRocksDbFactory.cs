@@ -23,12 +23,12 @@ namespace Nethermind.Db
 
         public static NullRocksDbFactory Instance { get; } = new();
 
-        public IDb CreateDb(RocksDbSettings rocksDbSettings)
+        public IDb CreateDb(DbSettings dbSettings)
         {
             throw new InvalidOperationException();
         }
 
-        public IColumnsDb<T> CreateColumnsDb<T>(RocksDbSettings rocksDbSettings) where T : struct, Enum
+        public IColumnsDb<T> CreateColumnsDb<T>(DbSettings dbSettings) where T : struct, Enum
         {
             throw new InvalidOperationException();
         }

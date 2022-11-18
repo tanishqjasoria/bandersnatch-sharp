@@ -50,7 +50,7 @@ public class DbOnTheRocks : IDbWithSpan
 
     protected static IntPtr _cache;
 
-    private readonly RocksDbSettings _settings;
+    private readonly DbSettings _settings;
 
     protected static void InitCache(IDbConfig dbConfig)
     {
@@ -61,11 +61,11 @@ public class DbOnTheRocks : IDbWithSpan
         }
     }
 
-    public DbOnTheRocks(string basePath, RocksDbSettings rocksDbSettings, IDbConfig dbConfig, ColumnFamilies? columnFamilies = null)
+    public DbOnTheRocks(string basePath, DbSettings dbSettings, IDbConfig dbConfig, ColumnFamilies? columnFamilies = null)
     {
-        _settings = rocksDbSettings;
+        _settings = dbSettings;
         Name = _settings.DbName;
-        _db = Init(basePath, rocksDbSettings.DbPath, dbConfig, columnFamilies, rocksDbSettings.DeleteOnStart);
+        _db = Init(basePath, dbSettings.DbPath, dbConfig, columnFamilies, dbSettings.DeleteOnStart);
     }
 
     private RocksDb Init(string basePath, string dbPath, IDbConfig dbConfig,
