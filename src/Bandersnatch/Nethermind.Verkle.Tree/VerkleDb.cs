@@ -1,54 +1,20 @@
 using System.Diagnostics;
+using Nethermind.Serialization.Rlp;
 
 namespace Nethermind.Verkle.Tree;
+using LeafStore = Dictionary<byte[], byte[]?>;
+using SuffixStore = Dictionary<byte[], SuffixTree?>;
+using BranchStore = Dictionary<byte[], InternalNode?>;
 
-public class ByteArrayComparer : IEqualityComparer<byte[]>
-{
-    public bool Equals(byte[]? x, byte[]? y)
-    {
-        if (x == null || y == null)
-        {
-            return x == y;
-        }
-        return x.SequenceEqual(y);
-    }
-
-    public int GetHashCode(byte[] value)
-    {
-        HashCode hash = new HashCode();
-        hash.AddBytes(value);
-        return hash.ToHashCode();
-    }
-}
-
-public class MemoryStateDb
-{
-    public Dictionary<byte[], byte[]?> LeafTable { get; }
-    public Dictionary<byte[], SuffixTree?> StemTable { get; }
-    public Dictionary<byte[], InternalNode?> BranchTable { get; }
-
-    public MemoryStateDb()
-    {
-        LeafTable = new Dictionary<byte[], byte[]?>(new ByteArrayComparer());
-        StemTable = new Dictionary<byte[], SuffixTree?>(new ByteArrayComparer());
-        BranchTable = new Dictionary<byte[], InternalNode?>(new ByteArrayComparer());
-    }
-
-    public byte[] Encode()
-    {
-        return Array.Empty<byte>();
-    }
-
-}
 
 public class DiffLayer
 {
-    public Dictionary<long, MemoryStateDb> Forward { get; }
-    public Dictionary<long, MemoryStateDb> Reverse { get; }
+    public Dictionary<long, byte[]> Forward { get; }
+    public Dictionary<long, byte[]> Reverse { get; }
     public DiffLayer()
     {
-        Forward = new Dictionary<long, MemoryStateDb>();
-        Reverse = new Dictionary<long, MemoryStateDb>();
+        Forward = new Dictionary<long, byte[]>();
+        Reverse = new Dictionary<long, byte[]>();
     }
 }
 
@@ -145,14 +111,16 @@ public class VerkleDb : IVerkleDb
 
             Storage.BranchTable[entry.Key] = entry.Value;
         }
-        History.Forward[blockNumber] = Batch;
-        History.Reverse[blockNumber] = reverseDiff;
+
+        History.Forward[blockNumber] = Batch.Encode();
+        History.Reverse[blockNumber] = reverseDiff.Encode();
         FullStateBlock = blockNumber;
     }
 
     public void ReverseState()
     {
-        MemoryStateDb reverseDiff = History.Reverse[FullStateBlock];
+        byte[] reverseDiffByte = History.Reverse[FullStateBlock];
+        MemoryStateDb reverseDiff = MemoryStateDb.Decode(reverseDiffByte);
 
         foreach (KeyValuePair<byte[], byte[]?> entry in reverseDiff.LeafTable)
         {

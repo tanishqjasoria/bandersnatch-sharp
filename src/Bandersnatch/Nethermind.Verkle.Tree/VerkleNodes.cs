@@ -14,9 +14,9 @@ public enum NodeType : byte
 
 public class SuffixTree
 {
-    private byte[] Stem { get; }
-    private Commitment C1 { get; }
-    private Commitment C2 { get; }
+    public byte[] Stem { get; }
+    public Commitment C1 { get; }
+    public Commitment C2 { get; }
     public Commitment ExtensionCommitment { get; }
     public Fr InitCommitmentHash { get; }
 
@@ -96,12 +96,12 @@ public class BranchNode : InternalNode
 
 public class InternalNode
 {
-    public bool IsStem => _nodeType == NodeType.StemNode;
-    public bool IsBranchNode => _nodeType == NodeType.BranchNode;
+    public bool IsStem => NodeType == NodeType.StemNode;
+    public bool IsBranchNode => NodeType == NodeType.BranchNode;
 
     public readonly Commitment _internalCommitment;
 
-    private readonly NodeType _nodeType;
+    public readonly NodeType NodeType;
 
     private byte[]? _stem;
     public byte[] Stem
@@ -113,12 +113,12 @@ public class InternalNode
         }
     }
 
-    protected InternalNode(NodeType nodeType, byte[] stem, Commitment suffixCommitment)
+    public InternalNode(NodeType nodeType, byte[] stem, Commitment suffixCommitment)
     {
         switch (nodeType)
         {
             case NodeType.StemNode:
-                _nodeType = NodeType.StemNode;
+                NodeType = NodeType.StemNode;
                 _stem = stem;
                 _internalCommitment = suffixCommitment;
                 break;
@@ -128,7 +128,7 @@ public class InternalNode
         }
     }
 
-    protected InternalNode(NodeType nodeType)
+    public InternalNode(NodeType nodeType)
     {
         switch (nodeType)
         {
@@ -139,7 +139,7 @@ public class InternalNode
             default:
                 throw new ArgumentOutOfRangeException(nameof(nodeType), nodeType, null);
         }
-        _nodeType = nodeType;
+        NodeType = nodeType;
         _internalCommitment = new Commitment();
     }
     public Fr UpdateCommitment(Banderwagon point)
@@ -153,18 +153,18 @@ public class InternalNode
     {
         int nodeLength;
         byte[] rlp;
-        switch (_nodeType)
+        switch (NodeType)
         {
             case NodeType.BranchNode:
                 nodeLength = 32 + 1;
                 rlp = new byte[nodeLength];
-                rlp[0] = (byte)_nodeType;
+                rlp[0] = (byte)NodeType;
                 Buffer.BlockCopy(_internalCommitment.Point.ToBytes(), 0, rlp, 1, 32);
                 return rlp;
             case NodeType.StemNode:
                 nodeLength = 32 + 31 + 1;
                 rlp = new byte[nodeLength];
-                rlp[0] = (byte)_nodeType;
+                rlp[0] = (byte)NodeType;
                 Buffer.BlockCopy(_stem, 0, rlp, 1, 32);
                 Buffer.BlockCopy(_internalCommitment.Point.ToBytes(), 0, rlp, 32, 32);
                 return rlp;
