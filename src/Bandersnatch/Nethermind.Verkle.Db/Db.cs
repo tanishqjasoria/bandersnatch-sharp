@@ -8,69 +8,60 @@ using Nethermind.Db.Rocks;
 using Nethermind.Db.Rocks.Config;
 using Nethermind.Utils;
 
-namespace Nethermind.Verkle.Tree;
+namespace Nethermind.Verkle.Db;
 
-public enum DiagnosticMode
+public enum DbMode
 {
-    None,
     [ConfigItem(Description = "Diagnostics mode which uses an in-memory DB")]
     MemDb,
-    [ConfigItem(Description = "Diagnostics mode which uses a remote DB")]
-    RpcDb,
+    [ConfigItem(Description = "Diagnostics mode which uses an Persistant DB")]
+    PersistantDb,
     [ConfigItem(Description = "Diagnostics mode which uses a read-only DB")]
     ReadOnlyDb,
-    [ConfigItem(Description = "Just scan rewards for blocks + genesis")]
-    VerifyRewards,
-    [ConfigItem(Description = "Just scan and sum supply on all accounts")]
-    VerifySupply,
-    [ConfigItem(Description = "Verifies if full state is stored")]
-    VerifyTrie
 }
 
 public class DbFactory
 {
-    private static (IDbProvider DbProvider, RocksDbFactory RocksDbFactory, MemDbFactory MemDbFactory) InitDbApi(DiagnosticMode diagnosticMode, string baseDbPath, bool storeReceipts)
+    private static (IDbProvider DbProvider, RocksDbFactory RocksDbFactory, MemDbFactory MemDbFactory) InitDbApi(DbMode diagnosticMode, string baseDbPath, bool storeReceipts)
     {
         DbConfig dbConfig = new DbConfig();
-        DisposableStack disposeStack = new();
+        DisposableStack disposeStack = new DisposableStack();
         IDbProvider dbProvider;
         RocksDbFactory rocksDbFactory;
         MemDbFactory memDbFactory;
         switch (diagnosticMode)
         {
-            case DiagnosticMode.ReadOnlyDb:
+            case DbMode.ReadOnlyDb:
                 DbProvider rocksDbProvider = new DbProvider(DbModeHint.Persisted);
                 dbProvider = new ReadOnlyDbProvider(rocksDbProvider, storeReceipts); // ToDo storeReceipts as createInMemoryWriteStore - bug?
                 disposeStack.Push(rocksDbProvider);
                 rocksDbFactory = new RocksDbFactory(dbConfig, Path.Combine(baseDbPath, "debug"));
                 memDbFactory = new MemDbFactory();
                 break;
-            case DiagnosticMode.MemDb:
+            case DbMode.MemDb:
                 dbProvider = new DbProvider(DbModeHint.Mem);
                 rocksDbFactory = new RocksDbFactory(dbConfig, Path.Combine(baseDbPath, "debug"));
                 memDbFactory = new MemDbFactory();
                 break;
-            case DiagnosticMode.None:
-            case DiagnosticMode.RpcDb:
-            case DiagnosticMode.VerifyRewards:
-            case DiagnosticMode.VerifySupply:
-            case DiagnosticMode.VerifyTrie:
-                throw new ArgumentException();
-            default:
+            case DbMode.PersistantDb:
                 dbProvider = new DbProvider(DbModeHint.Persisted);
                 rocksDbFactory = new RocksDbFactory(dbConfig, baseDbPath);
                 memDbFactory = new MemDbFactory();
                 break;
+            default:
+                throw new ArgumentException();
+
         }
 
         return (dbProvider, rocksDbFactory, memDbFactory);
     }
 
-    public static async void InitDatabase()
+    public static (IDbProvider DbProvider, RocksDbFactory RocksDbFactory, MemDbFactory MemDbFactory) InitDatabase(DbMode dbMode)
     {
-        (IDbProvider dbProvider, RocksDbFactory rocksDbFactory, MemDbFactory memDbFactory) = InitDbApi(DiagnosticMode.None, "testDb", true);
+        (IDbProvider dbProvider, RocksDbFactory rocksDbFactory, MemDbFactory memDbFactory) = InitDbApi(dbMode, "testDb", true);
         StandardDbInitializer dbInitializer = new StandardDbInitializer(dbProvider, rocksDbFactory, memDbFactory, new FileSystem(), false);
-        await dbInitializer.InitStandardDbsAsync(true);
+        dbInitializer.InitStandardDbs(true);
+        return (dbProvider, rocksDbFactory, memDbFactory);
     }
 
 }

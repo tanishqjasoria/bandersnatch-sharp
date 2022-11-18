@@ -50,29 +50,32 @@ namespace Nethermind.Db
 
         private void RegisterAll(bool useReceiptsDb)
         {
-            RegisterDb(BuildDbSettings(DbNames.Blocks, () => Metrics.BlocksDbReads++, () => Metrics.BlocksDbWrites++));
-            RegisterDb(BuildDbSettings(DbNames.Headers, () => Metrics.HeaderDbReads++, () => Metrics.HeaderDbWrites++));
-            RegisterDb(BuildDbSettings(DbNames.BlockInfos, () => Metrics.BlockInfosDbReads++, () => Metrics.BlockInfosDbWrites++));
-
-            DbSettings stateDbSettings = BuildDbSettings(DbNames.State, () => Metrics.StateDbReads++, () => Metrics.StateDbWrites++);
-            RegisterCustomDb(DbNames.State, () => new FullPruningDb(
-                stateDbSettings,
-                PersistedDb ? new FullPruningInnerDbFactory(RocksDbFactory, _fileSystem, stateDbSettings.DbPath) : new MemDbFactoryToRocksDbAdapter(MemDbFactory),
-                () => Interlocked.Increment(ref Metrics.StateDbInPruningWrites)));
-
-            RegisterDb(BuildDbSettings(DbNames.Code, () => Metrics.CodeDbReads++, () => Metrics.CodeDbWrites++));
-            RegisterDb(BuildDbSettings(DbNames.Bloom, () => Metrics.BloomDbReads++, () => Metrics.BloomDbWrites++));
-            RegisterDb(BuildDbSettings(DbNames.CHT, () => Metrics.CHTDbReads++, () => Metrics.CHTDbWrites++));
-            RegisterDb(BuildDbSettings(DbNames.Witness, () => Metrics.WitnessDbReads++, () => Metrics.WitnessDbWrites++));
-            if (useReceiptsDb)
-            {
-                RegisterColumnsDb<ReceiptsColumns>(BuildDbSettings(DbNames.Receipts, () => Metrics.ReceiptsDbReads++, () => Metrics.ReceiptsDbWrites++));
-            }
-            else
-            {
-                RegisterCustomDb(DbNames.Receipts, () => new ReadOnlyColumnsDb<ReceiptsColumns>(new MemColumnsDb<ReceiptsColumns>(), false));
-            }
-            RegisterDb(BuildDbSettings(DbNames.Metadata, () => Metrics.MetadataDbReads++, () => Metrics.MetadataDbWrites++));
+            // RegisterDb(BuildDbSettings(DbNames.Blocks, () => Metrics.BlocksDbReads++, () => Metrics.BlocksDbWrites++));
+            // RegisterDb(BuildDbSettings(DbNames.Headers, () => Metrics.HeaderDbReads++, () => Metrics.HeaderDbWrites++));
+            // RegisterDb(BuildDbSettings(DbNames.BlockInfos, () => Metrics.BlockInfosDbReads++, () => Metrics.BlockInfosDbWrites++));
+            //
+            // DbSettings stateDbSettings = BuildDbSettings(DbNames.State, () => Metrics.StateDbReads++, () => Metrics.StateDbWrites++);
+            // RegisterCustomDb(DbNames.State, () => new FullPruningDb(
+            //     stateDbSettings,
+            //     PersistedDb ? new FullPruningInnerDbFactory(RocksDbFactory, _fileSystem, stateDbSettings.DbPath) : new MemDbFactoryToRocksDbAdapter(MemDbFactory),
+            //     () => Interlocked.Increment(ref Metrics.StateDbInPruningWrites)));
+            //
+            // RegisterDb(BuildDbSettings(DbNames.Code, () => Metrics.CodeDbReads++, () => Metrics.CodeDbWrites++));
+            // RegisterDb(BuildDbSettings(DbNames.Bloom, () => Metrics.BloomDbReads++, () => Metrics.BloomDbWrites++));
+            // RegisterDb(BuildDbSettings(DbNames.CHT, () => Metrics.CHTDbReads++, () => Metrics.CHTDbWrites++));
+            // RegisterDb(BuildDbSettings(DbNames.Witness, () => Metrics.WitnessDbReads++, () => Metrics.WitnessDbWrites++));
+            // if (useReceiptsDb)
+            // {
+            //     RegisterColumnsDb<ReceiptsColumns>(BuildDbSettings(DbNames.Receipts, () => Metrics.ReceiptsDbReads++, () => Metrics.ReceiptsDbWrites++));
+            // }
+            // else
+            // {
+            //     RegisterCustomDb(DbNames.Receipts, () => new ReadOnlyColumnsDb<ReceiptsColumns>(new MemColumnsDb<ReceiptsColumns>(), false));
+            // }
+            // RegisterDb(BuildDbSettings(DbNames.Metadata, () => Metrics.MetadataDbReads++, () => Metrics.MetadataDbWrites++));
+            RegisterDb(BuildDbSettings(DbNames.Leaf, () => Metrics.MetadataDbReads++, () => Metrics.MetadataDbWrites++));
+            RegisterDb(BuildDbSettings(DbNames.Stem, () => Metrics.MetadataDbReads++, () => Metrics.MetadataDbWrites++));
+            RegisterDb(BuildDbSettings(DbNames.Branch, () => Metrics.MetadataDbReads++, () => Metrics.MetadataDbWrites++));
         }
 
         private static DbSettings BuildDbSettings(string dbName, Action updateReadsMetrics, Action updateWriteMetrics, bool deleteOnStart = false)

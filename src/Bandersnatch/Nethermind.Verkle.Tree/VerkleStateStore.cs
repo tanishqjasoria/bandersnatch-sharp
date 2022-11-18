@@ -1,24 +1,9 @@
 using System.Diagnostics;
-using Nethermind.Serialization.Rlp;
+using Nethermind.Verkle.Tree.VerkleStateDb;
 
 namespace Nethermind.Verkle.Tree;
-using LeafStore = Dictionary<byte[], byte[]?>;
-using SuffixStore = Dictionary<byte[], SuffixTree?>;
-using BranchStore = Dictionary<byte[], InternalNode?>;
 
-
-public class DiffLayer
-{
-    public Dictionary<long, byte[]> Forward { get; }
-    public Dictionary<long, byte[]> Reverse { get; }
-    public DiffLayer()
-    {
-        Forward = new Dictionary<long, byte[]>();
-        Reverse = new Dictionary<long, byte[]>();
-    }
-}
-
-public class VerkleDb : IVerkleDb
+public class VerkleStateStore : IVerkleStore
 {
     private long FullStateBlock { get; set; }
     private MemoryStateDb Storage { get; }
@@ -26,7 +11,7 @@ public class VerkleDb : IVerkleDb
     private MemoryStateDb Cache { get; }
     private DiffLayer History { get; }
 
-    public VerkleDb()
+    public VerkleStateStore()
     {
         Storage = new MemoryStateDb();
         Batch = new MemoryStateDb();
@@ -169,7 +154,7 @@ public class VerkleDb : IVerkleDb
     }
 }
 
-public interface IVerkleDb
+public interface IVerkleStore
 {
     void InitRootHash();
     byte[]? GetLeaf(byte[] key);
