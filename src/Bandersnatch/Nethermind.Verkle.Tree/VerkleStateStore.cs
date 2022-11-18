@@ -9,14 +9,16 @@ public class VerkleStateStore : IVerkleStore
     private MemoryStateDb Storage { get; }
     private MemoryStateDb Batch { get; }
     private MemoryStateDb Cache { get; }
-    private DiffLayer History { get; }
+    private DiffLayer ForwardDiff { get; }
+    private DiffLayer ReverseDiff { get; }
 
     public VerkleStateStore()
     {
         Storage = new MemoryStateDb();
         Batch = new MemoryStateDb();
         Cache = new MemoryStateDb();
-        History = new DiffLayer();
+        ForwardDiff = new DiffLayer();
+        ReverseDiff = new DiffLayer();
         FullStateBlock = 0;
     }
 
@@ -97,14 +99,14 @@ public class VerkleStateStore : IVerkleStore
             Storage.BranchTable[entry.Key] = entry.Value;
         }
 
-        History.Forward[blockNumber] = Batch.Encode();
-        History.Reverse[blockNumber] = reverseDiff.Encode();
+        ForwardDiff.InsertDiff(blockNumber, Batch);
+        ReverseDiff.InsertDiff(blockNumber, reverseDiff);
         FullStateBlock = blockNumber;
     }
 
     public void ReverseState()
     {
-        byte[] reverseDiffByte = History.Reverse[FullStateBlock];
+        byte[] reverseDiffByte = ReverseDiff.FetchDiff(FullStateBlock);
         MemoryStateDb reverseDiff = MemoryStateDb.Decode(reverseDiffByte);
 
         foreach (KeyValuePair<byte[], byte[]?> entry in reverseDiff.LeafTable)

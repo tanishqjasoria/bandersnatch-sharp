@@ -16,7 +16,15 @@ public interface IVerkleDb
     void SetStem(byte[] stemKey, SuffixTree suffixTree);
     void SetBranch(byte[] branchKey, InternalNode internalNodeValue);
 
-    void BatchLeafInsert(IEnumerable<(byte[] key, byte[]? value)> keyLeaf);
-    void BatchStemInsert(IEnumerable<(byte[] key, SuffixTree? value)> suffixLeaf);
-    void BatchBranchInsert(IEnumerable<(byte[] key, InternalNode? value)> branchLeaf);
+    void BatchLeafInsert(IEnumerable<KeyValuePair<byte[], byte[]?>> keyLeaf);
+    void BatchStemInsert(IEnumerable<KeyValuePair<byte[], SuffixTree?>> suffixLeaf);
+    void BatchBranchInsert(IEnumerable<KeyValuePair<byte[], InternalNode?>> branchLeaf);
+}
+
+public interface IVerkleDiffDb: IVerkleDb
+{
+    byte[] Encode();
+    IEnumerable<KeyValuePair<byte[], byte[]?>> LeafNodes { get; }
+    IEnumerable<KeyValuePair<byte[], SuffixTree?>> StemNodes { get; }
+    IEnumerable<KeyValuePair<byte[], InternalNode?>> BranchNodes { get; }
 }

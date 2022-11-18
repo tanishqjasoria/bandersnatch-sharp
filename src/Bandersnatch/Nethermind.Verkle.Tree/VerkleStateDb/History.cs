@@ -3,13 +3,16 @@
 
 namespace Nethermind.Verkle.Tree.VerkleStateDb;
 
-public class DiffLayer
+public class DiffLayer: IDiffLayer
 {
-    public Dictionary<long, byte[]> Forward { get; }
-    public Dictionary<long, byte[]> Reverse { get; }
+    private Dictionary<long, byte[]> Diff { get; }
     public DiffLayer()
     {
-        Forward = new Dictionary<long, byte[]>();
-        Reverse = new Dictionary<long, byte[]>();
+        Diff = new Dictionary<long, byte[]>();
     }
+    public void InsertDiff(long blockNumber, IVerkleDiffDb diff)
+    {
+        Diff[blockNumber] = diff.Encode();
+    }
+    public byte[] FetchDiff(long blockNumber) => Diff[blockNumber];
 }

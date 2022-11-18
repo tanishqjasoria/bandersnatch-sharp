@@ -9,7 +9,7 @@ using LeafStore = Dictionary<byte[], byte[]?>;
 using SuffixStore = Dictionary<byte[], SuffixTree?>;
 using BranchStore = Dictionary<byte[], InternalNode?>;
 
-public class MemoryStateDb: IVerkleDb
+public class MemoryStateDb: IVerkleDiffDb
 {
     public Dictionary<byte[], byte[]?> LeafTable { get; }
     public Dictionary<byte[], SuffixTree?> StemTable { get; }
@@ -45,6 +45,10 @@ public class MemoryStateDb: IVerkleDb
         return MemoryStateDbSerializer.Instance.Decode(stream);
     }
 
+    public IEnumerable<KeyValuePair<byte[], byte[]?>> LeafNodes => LeafTable.AsEnumerable();
+    public IEnumerable<KeyValuePair<byte[], SuffixTree?>> StemNodes => StemTable.AsEnumerable();
+    public IEnumerable<KeyValuePair<byte[], InternalNode?>> BranchNodes => BranchTable.AsEnumerable();
+
     public byte[]? GetLeaf(byte[] key) => LeafTable.TryGetValue(key, out byte[]? value) ? value : null;
     public SuffixTree? GetStem(byte[] key) => StemTable.TryGetValue(key, out SuffixTree? value) ? value : null;
     public InternalNode? GetBranch(byte[] key) => BranchTable.TryGetValue(key, out InternalNode? value) ? value : null;
@@ -53,21 +57,21 @@ public class MemoryStateDb: IVerkleDb
     public void SetStem(byte[] stemKey, SuffixTree? suffixTree) => StemTable[stemKey] = suffixTree;
     public void SetBranch(byte[] branchKey, InternalNode? internalNodeValue) => BranchTable[branchKey] = internalNodeValue;
 
-    public void BatchLeafInsert(IEnumerable<(byte[] key, byte[]? value)> keyLeaf)
+    public void BatchLeafInsert(IEnumerable<KeyValuePair<byte[], byte[]?>> keyLeaf)
     {
         foreach ((byte[] key, byte[]? value) in keyLeaf)
         {
             SetLeaf(key, value);
         }
     }
-    public void BatchStemInsert(IEnumerable<(byte[] key, SuffixTree? value)> suffixLeaf)
+    public void BatchStemInsert(IEnumerable<KeyValuePair<byte[], SuffixTree?>> suffixLeaf)
     {
         foreach ((byte[] key, SuffixTree? value) in suffixLeaf)
         {
             SetStem(key, value);
         }
     }
-    public void BatchBranchInsert(IEnumerable<(byte[] key, InternalNode? value)> branchLeaf)
+    public void BatchBranchInsert(IEnumerable<KeyValuePair<byte[], InternalNode?>> branchLeaf)
     {
         foreach ((byte[] key, InternalNode? value) in branchLeaf)
         {
