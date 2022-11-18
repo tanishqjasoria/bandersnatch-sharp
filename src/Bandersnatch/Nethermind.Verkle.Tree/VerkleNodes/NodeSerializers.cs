@@ -10,7 +10,7 @@ using LeafStore = Dictionary<byte[], byte[]?>;
 using SuffixStore = Dictionary<byte[], SuffixTree?>;
 using BranchStore = Dictionary<byte[], InternalNode?>;
 
-public class SuffixTreeSerializer : IRlpStreamDecoder<SuffixTree>
+public class SuffixTreeSerializer : IRlpStreamDecoder<SuffixTree>, IRlpObjectDecoder<SuffixTree>
 {
     public static SuffixTreeSerializer Instance => new SuffixTreeSerializer();
     public int GetLength(SuffixTree item, RlpBehaviors rlpBehaviors)
@@ -39,9 +39,17 @@ public class SuffixTreeSerializer : IRlpStreamDecoder<SuffixTree>
         stream.Write(item.C2.Point.ToBytes());
         stream.Write(item.ExtensionCommitment.Point.ToBytes());
     }
+    public Rlp Encode(SuffixTree? item, RlpBehaviors rlpBehaviors = RlpBehaviors.None)
+    {
+        int length = GetLength(item, rlpBehaviors);
+        RlpStream stream = new RlpStream(Rlp.LengthOfSequence(length));
+        stream.StartSequence(length);
+        Encode(stream, item, rlpBehaviors);
+        return new Rlp(stream.Data);
+    }
 }
 
-public class InternalNodeSerializer : IRlpStreamDecoder<InternalNode>
+public class InternalNodeSerializer : IRlpStreamDecoder<InternalNode>, IRlpObjectDecoder<InternalNode>
 {
     public static InternalNodeSerializer Instance => new InternalNodeSerializer();
     public int GetLength(InternalNode item, RlpBehaviors rlpBehaviors)
@@ -86,4 +94,13 @@ public class InternalNodeSerializer : IRlpStreamDecoder<InternalNode>
                 throw new ArgumentOutOfRangeException();
         }
     }
+    public Rlp Encode(InternalNode item, RlpBehaviors rlpBehaviors = RlpBehaviors.None)
+    {
+        int length = GetLength(item, rlpBehaviors);
+        RlpStream stream = new RlpStream(Rlp.LengthOfSequence(length));
+        stream.StartSequence(length);
+        Encode(stream, item, rlpBehaviors);
+        return new Rlp(stream.Data);
+    }
+
 }

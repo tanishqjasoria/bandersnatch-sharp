@@ -9,12 +9,15 @@ using BranchStore = Dictionary<byte[], InternalNode?>;
 
 public interface IVerkleDb
 {
-    byte[]? GetLeaf(byte[] key);
-    SuffixTree? GetStem(byte[] key);
-    InternalNode? GetBranch(byte[] key);
+    bool GetLeaf(byte[] key, out byte[]? value);
+    bool GetStem(byte[] key, out SuffixTree? value);
+    bool GetBranch(byte[] key, out InternalNode? value);
     void SetLeaf(byte[] leafKey, byte[] leafValue);
     void SetStem(byte[] stemKey, SuffixTree suffixTree);
     void SetBranch(byte[] branchKey, InternalNode internalNodeValue);
+    void RemoveLeaf(byte[] leafKey);
+    void RemoveStem(byte[] stemKey);
+    void RemoveBranch(byte[] branchKey);
 
     void BatchLeafInsert(IEnumerable<KeyValuePair<byte[], byte[]?>> keyLeaf);
     void BatchStemInsert(IEnumerable<KeyValuePair<byte[], SuffixTree?>> suffixLeaf);

@@ -8,7 +8,7 @@ namespace Nethermind.Verkle.Tree.Test;
 using Fr = FixedFiniteField<BandersnatchScalarFieldStruct>;
 
 [TestFixture]
-[Parallelizable(ParallelScope.All)]
+// [Parallelizable(ParallelScope.All)]
 public class VerkleTreeTests
 {
     private byte[] _array1To32 =

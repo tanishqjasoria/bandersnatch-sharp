@@ -29,9 +29,9 @@ namespace Nethermind.Db
         public const string Witness = "witness";
         public const string CHT = "canonicalHashTrie";
         public const string Metadata = "metadata";
-        public const string Leaf = "metadata";
-        public const string Stem = "metadata";
-        public const string Branch = "metadata";
+        public const string Leaf = "leaf";
+        public const string Stem = "stem";
+        public const string Branch = "branch";
 
     }
 }

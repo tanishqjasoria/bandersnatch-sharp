@@ -48,14 +48,24 @@ public class MemoryStateDb: IVerkleDiffDb
     public IEnumerable<KeyValuePair<byte[], byte[]?>> LeafNodes => LeafTable.AsEnumerable();
     public IEnumerable<KeyValuePair<byte[], SuffixTree?>> StemNodes => StemTable.AsEnumerable();
     public IEnumerable<KeyValuePair<byte[], InternalNode?>> BranchNodes => BranchTable.AsEnumerable();
-
-    public byte[]? GetLeaf(byte[] key) => LeafTable.TryGetValue(key, out byte[]? value) ? value : null;
-    public SuffixTree? GetStem(byte[] key) => StemTable.TryGetValue(key, out SuffixTree? value) ? value : null;
-    public InternalNode? GetBranch(byte[] key) => BranchTable.TryGetValue(key, out InternalNode? value) ? value : null;
-
+    public bool GetLeaf(byte[] key, out byte[]? value) => LeafTable.TryGetValue(key, out value);
+    public bool GetStem(byte[] key, out SuffixTree? value) => StemTable.TryGetValue(key, out value);
+    public bool GetBranch(byte[] key, out InternalNode? value) => BranchTable.TryGetValue(key, out value);
     public void SetLeaf(byte[] leafKey, byte[]? leafValue) => LeafTable[leafKey] = leafValue;
     public void SetStem(byte[] stemKey, SuffixTree? suffixTree) => StemTable[stemKey] = suffixTree;
     public void SetBranch(byte[] branchKey, InternalNode? internalNodeValue) => BranchTable[branchKey] = internalNodeValue;
+    public void RemoveLeaf(byte[] leafKey)
+    {
+        LeafTable.Remove(leafKey);
+    }
+    public void RemoveStem(byte[] stemKey)
+    {
+        StemTable.Remove(stemKey);
+    }
+    public void RemoveBranch(byte[] branchKey)
+    {
+        BranchTable.Remove(branchKey);
+    }
 
     public void BatchLeafInsert(IEnumerable<KeyValuePair<byte[], byte[]?>> keyLeaf)
     {

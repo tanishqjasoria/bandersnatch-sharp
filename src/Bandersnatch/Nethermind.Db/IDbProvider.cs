@@ -25,25 +25,25 @@ namespace Nethermind.Db
     public interface IDbProvider : IDisposable
     {
         DbModeHint DbMode { get; }
-        public IDb StateDb => GetDb<IDb>(DbNames.State);
+        // public IDb StateDb => GetDb<IDb>(DbNames.State);
         public IDb LeafDb => GetDb<IDb>(DbNames.Leaf);
         public IDb StemDb => GetDb<IDb>(DbNames.Stem);
         public IDb BranchDb => GetDb<IDb>(DbNames.Branch);
-        public IDb CodeDb => GetDb<IDb>(DbNames.Code);
-        public IColumnsDb<ReceiptsColumns> ReceiptsDb => GetDb<IColumnsDb<ReceiptsColumns>>(DbNames.Receipts);
-        public IDb BlocksDb => GetDb<IDb>(DbNames.Blocks);
-        public IDb HeadersDb => GetDb<IDb>(DbNames.Headers);
-        public IDb BlockInfosDb => GetDb<IDb>(DbNames.BlockInfos);
-
-        // BloomDB progress / config (does not contain blooms - they are kept in bloom storage)
-        public IDb BloomDb => GetDb<IDb>(DbNames.Bloom);
+        // public IDb CodeDb => GetDb<IDb>(DbNames.Code);
+        // public IColumnsDb<ReceiptsColumns> ReceiptsDb => GetDb<IColumnsDb<ReceiptsColumns>>(DbNames.Receipts);
+        // public IDb BlocksDb => GetDb<IDb>(DbNames.Blocks);
+        // public IDb HeadersDb => GetDb<IDb>(DbNames.Headers);
+        // public IDb BlockInfosDb => GetDb<IDb>(DbNames.BlockInfos);
+        //
+        // // BloomDB progress / config (does not contain blooms - they are kept in bloom storage)
+        // public IDb BloomDb => GetDb<IDb>(DbNames.Bloom);
 
         // LES (ignore)
-        public IDb ChtDb => GetDb<IDb>(DbNames.CHT);
+        // public IDb ChtDb => GetDb<IDb>(DbNames.CHT);
+        //
+        // public IDb WitnessDb => GetDb<IDb>(DbNames.Witness);
 
-        public IDb WitnessDb => GetDb<IDb>(DbNames.Witness);
-
-        public IDb MetadataDb => GetDb<IDb>(DbNames.Metadata);
+        // public IDb MetadataDb => GetDb<IDb>(DbNames.Metadata);
 
         T GetDb<T>(string dbName) where T : class, IDb;
 

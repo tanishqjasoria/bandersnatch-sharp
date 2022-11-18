@@ -56,12 +56,12 @@ public class DbFactory
         return (dbProvider, rocksDbFactory, memDbFactory);
     }
 
-    public static (IDbProvider DbProvider, RocksDbFactory RocksDbFactory, MemDbFactory MemDbFactory) InitDatabase(DbMode dbMode)
+    public static IDbProvider InitDatabase(DbMode dbMode)
     {
         (IDbProvider dbProvider, RocksDbFactory rocksDbFactory, MemDbFactory memDbFactory) = InitDbApi(dbMode, "testDb", true);
         StandardDbInitializer dbInitializer = new StandardDbInitializer(dbProvider, rocksDbFactory, memDbFactory, new FileSystem(), false);
         dbInitializer.InitStandardDbs(true);
-        return (dbProvider, rocksDbFactory, memDbFactory);
+        return dbProvider;
     }
 
 }
