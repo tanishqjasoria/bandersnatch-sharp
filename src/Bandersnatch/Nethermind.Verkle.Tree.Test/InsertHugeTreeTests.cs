@@ -13,7 +13,7 @@ public class InsertHugeTreeTests
 {
 
     public static Random Random { get; } = new();
-    public static int numKeys = 10000;
+    public static int numKeys = 1000;
     private static string GetDbPathForTest()
     {
         string tempDir = Path.GetTempPath();
