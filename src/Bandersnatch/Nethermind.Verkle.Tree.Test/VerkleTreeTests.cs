@@ -1,14 +1,15 @@
 using System;
+using System.IO;
 using FluentAssertions;
 using Nethermind.Field;
 using Nethermind.Verkle.Curve;
+using Nethermind.Verkle.Db;
 using NUnit.Framework;
 
 namespace Nethermind.Verkle.Tree.Test;
 using Fr = FixedFiniteField<BandersnatchScalarFieldStruct>;
 
-[TestFixture]
-[Parallelizable(ParallelScope.All)]
+[TestFixture, Parallelizable(ParallelScope.All)]
 public class VerkleTreeTests
 {
     private byte[] _array1To32 =
@@ -58,11 +59,43 @@ public class VerkleTreeTests
         197, 210, 70, 1, 134, 247, 35, 60, 146, 126, 125, 178, 220, 199, 3, 192, 229, 0, 182, 83, 202, 130, 39, 59, 123, 250, 216, 4, 93, 133, 164, 112,
     };
 
-
-    [Test]
-    public void InsertKey0Value0()
+    private static string GetDbPathForTest()
     {
-        VerkleTree tree = new VerkleTree();
+        string tempDir = Path.GetTempPath();
+        string dbname = "VerkleTrie_TestID_" + TestContext.CurrentContext.Test.ID;
+        return Path.Combine(tempDir, dbname);
+    }
+
+    private static VerkleTree GetVerkleTreeForTest(DbMode dbMode)
+    {
+        switch (dbMode)
+        {
+            case DbMode.MemDb:
+                return new VerkleTree(dbMode, null);
+            case DbMode.PersistantDb:
+                return new VerkleTree(dbMode, GetDbPathForTest());
+            case DbMode.ReadOnlyDb:
+            default:
+                throw new ArgumentOutOfRangeException(nameof(dbMode), dbMode, null);
+        }
+    }
+
+    [TearDown]
+    public void CleanTestData()
+    {
+        string dbPath = GetDbPathForTest();
+        if (Directory.Exists(dbPath))
+        {
+            Directory.Delete(dbPath,true);
+        }
+    }
+
+
+    [TestCase(DbMode.MemDb)]
+    [TestCase(DbMode.PersistantDb)]
+    public void InsertKey0Value0(DbMode dbMode)
+    {
+        VerkleTree tree = GetVerkleTreeForTest(dbMode);
         byte[] key = _emptyArray;
 
         tree.Insert(key, key);
@@ -72,10 +105,11 @@ public class VerkleTreeTests
         tree.Get(key).Should().BeEquivalentTo(key);
     }
 
-    [Test]
-    public void InsertKey1Value1()
+    [TestCase(DbMode.MemDb)]
+    [TestCase(DbMode.PersistantDb)]
+    public void InsertKey1Value1(DbMode dbMode)
     {
-        VerkleTree tree = new VerkleTree();
+        VerkleTree tree = GetVerkleTreeForTest(dbMode);
         byte[] key = _array1To32;
 
         tree.Insert(key, key);
@@ -85,10 +119,11 @@ public class VerkleTreeTests
         tree.Get(key).Should().BeEquivalentTo(key);
     }
 
-    [Test]
-    public void InsertSameStemTwoLeaves()
+    [TestCase(DbMode.MemDb)]
+    [TestCase(DbMode.PersistantDb)]
+    public void InsertSameStemTwoLeaves(DbMode dbMode)
     {
-        VerkleTree tree = new();
+        VerkleTree tree = GetVerkleTreeForTest(dbMode);
         byte[] keyA = _array1To32;
 
         byte[] keyB = _array1To32Last128;
@@ -104,10 +139,11 @@ public class VerkleTreeTests
         tree.Get(keyB).Should().BeEquivalentTo(keyB);
     }
 
-    [Test]
-    public void InsertKey1Val1Key2Val2()
+    [TestCase(DbMode.MemDb)]
+    [TestCase(DbMode.PersistantDb)]
+    public void InsertKey1Val1Key2Val2(DbMode dbMode)
     {
-        VerkleTree tree = new VerkleTree();
+        VerkleTree tree = GetVerkleTreeForTest(dbMode);
         byte[] keyA = _emptyArray;
         byte[] keyB = _arrayAll1;
 
@@ -122,10 +158,11 @@ public class VerkleTreeTests
         tree.Get(keyB).Should().BeEquivalentTo(keyB);
     }
 
-    [Test]
-    public void InsertLongestPath()
+    [TestCase(DbMode.MemDb)]
+    [TestCase(DbMode.PersistantDb)]
+    public void InsertLongestPath(DbMode dbMode)
     {
-        VerkleTree tree = new VerkleTree();
+        VerkleTree tree = GetVerkleTreeForTest(dbMode);
         byte[] keyA = _emptyArray;
         byte[] keyB = (byte[])_emptyArray.Clone();
         keyB[30] = 1;
@@ -141,10 +178,11 @@ public class VerkleTreeTests
         tree.Get(keyB).Should().BeEquivalentTo(keyB);
     }
 
-    [Test]
-    public void InsertAndTraverseLongestPath()
+    [TestCase(DbMode.MemDb)]
+    [TestCase(DbMode.PersistantDb)]
+    public void InsertAndTraverseLongestPath(DbMode dbMode)
     {
-        VerkleTree tree = new VerkleTree();
+        VerkleTree tree = GetVerkleTreeForTest(dbMode);
         byte[] keyA = _emptyArray;
         tree.Insert(keyA, keyA);
         AssertRootNode(tree.RootHash,
@@ -167,17 +205,19 @@ public class VerkleTreeTests
         tree.Get(keyC).Should().BeEquivalentTo(keyC);
     }
 
-    [Test]
-    public void TestEmptyTrie()
+    [TestCase(DbMode.MemDb)]
+    [TestCase(DbMode.PersistantDb)]
+    public void TestEmptyTrie(DbMode dbMode)
     {
-        VerkleTree tree = new VerkleTree();
+        VerkleTree tree = GetVerkleTreeForTest(dbMode);
         tree.RootHash.Should().BeEquivalentTo(Fr.Zero.ToBytes());
     }
 
-    [Test]
-    public void TestSimpleUpdate()
+    [TestCase(DbMode.MemDb)]
+    [TestCase(DbMode.PersistantDb)]
+    public void TestSimpleUpdate(DbMode dbMode)
     {
-        VerkleTree tree = new VerkleTree();
+        VerkleTree tree = GetVerkleTreeForTest(dbMode);
         byte[] key = _array1To32;
         byte[] value = _emptyArray;
         tree.Insert(key, value);
@@ -191,10 +231,11 @@ public class VerkleTreeTests
         tree.Get(key).Should().BeEquivalentTo(key);
     }
 
-    [Test]
-    public void TestInsertGet()
+    [TestCase(DbMode.MemDb)]
+    [TestCase(DbMode.PersistantDb)]
+    public void TestInsertGet(DbMode dbMode)
     {
-        VerkleTree tree = new VerkleTree();
+        VerkleTree tree = GetVerkleTreeForTest(dbMode);
 
         tree.Insert(_keyVersion, _emptyArray);
         AssertRootNode(tree.RootHash,
@@ -223,16 +264,11 @@ public class VerkleTreeTests
         tree.Get(_keyCodeSize).Should().BeEquivalentTo(_emptyArray);
     }
 
-    private static void AssertRootNode(byte[] realRootHash, string expectedRootHash)
+    [TestCase(DbMode.MemDb)]
+    [TestCase(DbMode.PersistantDb)]
+    public void TestValueSameBeforeAndAfterFlush(DbMode dbMode)
     {
-        Convert.ToHexString(realRootHash).Should()
-            .BeEquivalentTo(expectedRootHash);
-    }
-
-    [Test]
-    public void TestValueSameBeforeAndAfterFlush()
-    {
-        VerkleTree tree = new VerkleTree();
+        VerkleTree tree = GetVerkleTreeForTest(dbMode);
 
 
         tree.Insert(_keyVersion, _emptyArray);
@@ -256,10 +292,11 @@ public class VerkleTreeTests
         tree.Get(_keyCodeSize).Should().BeEquivalentTo(_emptyArray);
     }
 
-    [Test]
-    public void TestInsertGetMultiBlock()
+    [TestCase(DbMode.MemDb)]
+    [TestCase(DbMode.PersistantDb)]
+    public void TestInsertGetMultiBlock(DbMode dbMode)
     {
-        VerkleTree tree = new VerkleTree();
+        VerkleTree tree = GetVerkleTreeForTest(dbMode);
 
         tree.Insert(_keyVersion, _emptyArray);
         tree.Insert(_keyBalance, _emptyArray);
@@ -288,10 +325,11 @@ public class VerkleTreeTests
         tree.Get(_keyCodeSize).Should().BeEquivalentTo(_arrayAll0Last2);
     }
 
-    [Test]
-    public void TestInsertGetMultiBlockReverseState()
+    [TestCase(DbMode.MemDb)]
+    [TestCase(DbMode.PersistantDb)]
+    public void TestInsertGetMultiBlockReverseState(DbMode dbMode)
     {
-        VerkleTree tree = new VerkleTree();
+        VerkleTree tree = GetVerkleTreeForTest(dbMode);
 
         tree.Insert(_keyVersion, _emptyArray);
         tree.Insert(_keyBalance, _emptyArray);
@@ -326,5 +364,10 @@ public class VerkleTreeTests
         tree.Get(_keyNonce).Should().BeEquivalentTo(_emptyArray);
         tree.Get(_keyCodeCommitment).Should().BeEquivalentTo(_valueEmptyCodeHashValue);
         tree.Get(_keyCodeSize).Should().BeEquivalentTo(_emptyArray);
+    }
+    private static void AssertRootNode(byte[] realRootHash, string expectedRootHash)
+    {
+        Convert.ToHexString(realRootHash).Should()
+            .BeEquivalentTo(expectedRootHash);
     }
 }
