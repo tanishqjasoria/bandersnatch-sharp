@@ -22,9 +22,15 @@ public class DiskDb: IVerkleDb
     }
     public byte[]? GetLeaf(byte[] key) => LeafDb[key];
 
-    public SuffixTree? GetStem(byte[] key) => SuffixTreeSerializer.Instance.Decode(StemDb[key].AsRlpStream());
+    public SuffixTree? GetStem(byte[] key)
+    {
+        return StemDb[key] is null ? null : SuffixTreeSerializer.Instance.Decode(StemDb[key]);
+    }
 
-    public InternalNode? GetBranch(byte[] key) => InternalNodeSerializer.Instance.Decode(BranchDb[key].AsRlpStream());
+    public InternalNode? GetBranch(byte[] key)
+    {
+        return BranchDb[key] is null ? null : InternalNodeSerializer.Instance.Decode(BranchDb[key]);
+    }
 
     public void SetLeaf(byte[] leafKey, byte[]? leafValue, IKeyValueStore db) => db[leafKey] = leafValue;
 

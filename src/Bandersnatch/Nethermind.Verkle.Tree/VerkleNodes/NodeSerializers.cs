@@ -26,11 +26,11 @@ public class SuffixTreeSerializer : IRlpStreamDecoder<SuffixTree>, IRlpObjectDec
 
     public SuffixTree Decode(RlpStream rlpStream, RlpBehaviors rlpBehaviors = RlpBehaviors.None)
     {
-        return new SuffixTree(
-            rlpStream.Read(31).ToArray(),
-            rlpStream.Read(32).ToArray(),
-            rlpStream.Read(32).ToArray(),
-            rlpStream.Read(32).ToArray());
+        byte[] stem = rlpStream.Read(31).ToArray();
+        byte[] c1 = rlpStream.Read(32).ToArray();
+        byte[] c2 = rlpStream.Read(32).ToArray();
+        byte[] extCommit = rlpStream.Read(32).ToArray();
+        return new SuffixTree(stem, c1, c2, extCommit);
     }
     public void Encode(RlpStream stream, SuffixTree item, RlpBehaviors rlpBehaviors = RlpBehaviors.None)
     {
@@ -46,6 +46,13 @@ public class SuffixTreeSerializer : IRlpStreamDecoder<SuffixTree>, IRlpObjectDec
         stream.StartSequence(length);
         Encode(stream, item, rlpBehaviors);
         return new Rlp(stream.Data);
+    }
+
+    public SuffixTree Decode(byte[] data, RlpBehaviors rlpBehaviors = RlpBehaviors.None)
+    {
+        RlpStream stream = data.AsRlpStream();
+        stream.ReadSequenceLength();
+        return Decode(stream, rlpBehaviors);
     }
 }
 
@@ -101,6 +108,12 @@ public class InternalNodeSerializer : IRlpStreamDecoder<InternalNode>, IRlpObjec
         stream.StartSequence(length);
         Encode(stream, item, rlpBehaviors);
         return new Rlp(stream.Data);
+    }
+    public InternalNode Decode(byte[] data, RlpBehaviors rlpBehaviors = RlpBehaviors.None)
+    {
+        RlpStream stream = data.AsRlpStream();
+        stream.ReadSequenceLength();
+        return Decode(stream, rlpBehaviors);
     }
 
 }
