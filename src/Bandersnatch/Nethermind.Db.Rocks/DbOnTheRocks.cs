@@ -142,17 +142,17 @@ public class DbOnTheRocks : IDbWithSpan
 
     protected static T? ReadConfig<T>(IDbConfig dbConfig, string propertyName, string tableName)
     {
-        string prefixed = string.Concat(tableName.StartsWith("State") ? string.Empty : string.Concat(tableName, "Db"),
-            propertyName);
+        // string prefixed = string.Concat(tableName.StartsWith("State") ? string.Empty : string.Concat(tableName, "Db"),
+            // propertyName);
         try
         {
             return (T?)dbConfig.GetType()
-                .GetProperty(prefixed, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance)?
+                .GetProperty(propertyName, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance)?
                 .GetValue(dbConfig);
         }
         catch (Exception e)
         {
-            throw new InvalidDataException($"Unable to read {prefixed} property from DB config", e);
+            throw new InvalidDataException($"Unable to read {propertyName} property from DB config", e);
         }
     }
 
