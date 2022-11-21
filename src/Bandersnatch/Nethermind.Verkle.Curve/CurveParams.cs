@@ -1,8 +1,9 @@
 using Nethermind.Field;
 using Nethermind.Int256;
+using Nethermind.MontgomeryField;
 
 namespace Nethermind.Verkle.Curve;
-using Fp = FixedFiniteField<BandersnatchBaseFieldStruct>;
+using Fp = FpE;
 
 public readonly struct CurveParams
 {
@@ -29,12 +30,16 @@ public readonly struct CurveParams
 
     public static readonly Fp A = new(-5);
 
-    public static readonly Fp YTe = new(new UInt256(NumY));
-    public static readonly Fp XTe = new(new UInt256(NumX));
+    public static readonly Fp YTe = new(NumY);
+    public static readonly Fp XTe = new(NumX);
 
-    public static readonly Fp DNum = new(new UInt256(Num));
+    public static readonly Fp DNum = new(Num);
 
-    public static readonly Fp DDen = Fp.Inverse(new Fp(new UInt256(Den))) ??
-                                     throw new Exception("This should not be null");
-    public static readonly Fp D = DNum * DDen;
+    public static Lazy<Fp> DDen = new Lazy<Fp>(() =>
+    {
+        Fp.Inverse(new Fp(Den), out FpE res);
+        return res;
+    });
+
+    public static readonly Fp D = DNum * DDen.Value;
 }

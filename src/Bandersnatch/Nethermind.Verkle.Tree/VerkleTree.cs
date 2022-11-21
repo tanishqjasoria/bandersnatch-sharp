@@ -1,16 +1,17 @@
 using System.Runtime.CompilerServices;
 using Nethermind.Field;
+using Nethermind.MontgomeryField;
 using Nethermind.Verkle.Curve;
 using Nethermind.Verkle.Db;
 using Nethermind.Verkle.Utils;
 
 namespace Nethermind.Verkle.Tree;
-using Fr = FixedFiniteField<BandersnatchScalarFieldStruct>;
+using Fr = FrE;
 
 public class VerkleTree
 {
     private readonly IVerkleStore _stateDb;
-    public byte[] RootHash => _stateDb.GetBranch(Array.Empty<byte>())?._internalCommitment.PointAsField.ToBytes() ?? throw new InvalidOperationException();
+    public byte[] RootHash => _stateDb.GetBranch(Array.Empty<byte>())?._internalCommitment.PointAsField.ToBytes().ToArray() ?? throw new InvalidOperationException();
 
     public VerkleTree(DbMode dbMode, string? dbPath)
     {

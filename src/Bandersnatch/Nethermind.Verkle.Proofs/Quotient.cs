@@ -1,9 +1,10 @@
 using Nethermind.Field;
+using Nethermind.MontgomeryField;
 using Nethermind.Verkle.Curve;
 using Nethermind.Verkle.Polynomial;
 
 namespace Nethermind.Verkle.Proofs;
-using Fr = FixedFiniteField<BandersnatchScalarFieldStruct>;
+using Fr = FrE;
 
 public static class Quotient
 {
@@ -11,18 +12,18 @@ public static class Quotient
         Fr index)
     {
         int domainSize = precomp.Domain.Length;
-        Fr?[]? inverses = precomp.DomainInv;
-        Fr?[]? aPrimeDomain = precomp.APrimeDomain;
-        Fr?[]? aPrimeDomainInv = precomp.APrimeDomainInv;
+        Fr[] inverses = precomp.DomainInv;
+        Fr[] aPrimeDomain = precomp.APrimeDomain;
+        Fr[] aPrimeDomainInv = precomp.APrimeDomainInv;
 
-        int indexI = index.ToInt();
+        int indexI = (int)index.u0;
 
         Fr[] q = new Fr[domainSize];
         for (int i = 0; i < domainSize; i++)
         {
             q[i] = Fr.Zero;
         }
-        Fr? y = f.Evaluations[indexI];
+        Fr y = f.Evaluations[indexI];
 
         for (int i = 0; i < domainSize; i++)
         {
@@ -40,10 +41,10 @@ public static class Quotient
     public static Fr[] ComputeQuotientOutsideDomain(PreComputeWeights precom, LagrangeBasis f, Fr z,
         Fr y)
     {
-        Fr?[]? domain = precom.Domain;
+        Fr[] domain = precom.Domain;
         int domainSize = domain.Length;
 
-        Fr[]? q = new Fr[domainSize];
+        Fr[] q = new Fr[domainSize];
         for (int i = 0; i < domainSize; i++)
         {
             q[i] = (f.Evaluations[i] - y) / (domain[i] - z);

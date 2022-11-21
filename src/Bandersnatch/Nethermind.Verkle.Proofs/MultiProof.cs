@@ -1,9 +1,10 @@
 using Nethermind.Field;
+using Nethermind.MontgomeryField;
 using Nethermind.Verkle.Curve;
 using Nethermind.Verkle.Polynomial;
 
 namespace Nethermind.Verkle.Proofs;
-using Fr = FixedFiniteField<BandersnatchScalarFieldStruct>;
+using Fr = FrE;
 
 public class MultiProof
 {
@@ -28,20 +29,20 @@ public class MultiProof
             transcript.AppendScalar(query.y, "y");
         }
 
-        Fr? r = transcript.ChallengeScalar("r");
+        Fr r = transcript.ChallengeScalar("r");
         Fr[] g = new Fr[domainSize];
         for (int i = 0; i < domainSize; i++)
         {
             g[i] = Fr.Zero;
         }
 
-        Fr? powerOfR = Fr.One;
+        Fr powerOfR = Fr.One;
 
         foreach (MultiProofProverQuery query in queries)
         {
-            LagrangeBasis? f = query.f;
-            Fr? index = query.z;
-            Fr[]? quotient = Quotient.ComputeQuotientInsideDomain(precomp, f, index);
+            LagrangeBasis f = query.f;
+            Fr index = query.z;
+            Fr[] quotient = Quotient.ComputeQuotientInsideDomain(precomp, f, index);
             for (int i = 0; i < domainSize; i++)
             {
                 g[i] += powerOfR * quotient[i];
@@ -50,9 +51,9 @@ public class MultiProof
             powerOfR *= r;
         }
 
-        Banderwagon? D = crs.Commit(g);
+        Banderwagon D = crs.Commit(g);
         transcript.AppendPoint(D, "D");
-        Fr? t = transcript.ChallengeScalar("t");
+        Fr t = transcript.ChallengeScalar("t");
 
         Fr[] h = new Fr[domainSize];
         for (int i = 0; i < domainSize; i++)
@@ -64,33 +65,33 @@ public class MultiProof
 
         foreach (MultiProofProverQuery query in queries)
         {
-            LagrangeBasis? f = query.f;
-            int index = query.z.ToInt();
-            Fr? denominatorInv = Fr.Inverse(t - precomp.Domain[index]);
+            LagrangeBasis f = query.f;
+            int index = (int)query.z.u0;
+            Fr.Inverse(t - precomp.Domain[index], out Fr denominatorInv);
 
             for (int i = 0; i < domainSize; i++)
             {
                 h[i] += powerOfR * f.Evaluations[i] * denominatorInv;
             }
 
-            powerOfR = powerOfR * r;
+            powerOfR *= r;
         }
 
-        Fr[]? hMinusG = new Fr[domainSize];
+        Fr[] hMinusG = new Fr[domainSize];
         for (int i = 0; i < domainSize; i++)
         {
             hMinusG[i] = h[i] - g[i];
         }
 
-        Banderwagon? E = crs.Commit(h);
+        Banderwagon E = crs.Commit(h);
         transcript.AppendPoint(E, "E");
 
-        Banderwagon? ipaCommitment = E - D;
-        Fr[]? inputPointVector = precomp.BarycentricFormulaConstants(t);
+        Banderwagon ipaCommitment = E - D;
+        Fr[] inputPointVector = precomp.BarycentricFormulaConstants(t);
         ProverQuery pQuery = new ProverQuery(hMinusG, ipaCommitment,
             t, inputPointVector);
 
-        (Fr? outputPoint, ProofStruct ipaProof) = IPA.MakeIpaProof(crs, transcript, pQuery);
+        (Fr outputPoint, ProofStruct ipaProof) = IPA.MakeIpaProof(crs, transcript, pQuery);
 
         return new MultiProofStruct(ipaProof, D);
 
@@ -99,7 +100,7 @@ public class MultiProof
     public bool CheckMultiProof(Transcript transcript, MultiProofVerifierQuery[] queries, MultiProofStruct proof)
     {
         transcript.DomainSep("multiproof");
-        Banderwagon? D = proof.D;
+        Banderwagon D = proof.D;
         ProofStruct ipaProof = proof.IpaProof;
         foreach (MultiProofVerifierQuery query in queries)
         {
@@ -108,24 +109,24 @@ public class MultiProof
             transcript.AppendScalar(query.y, "y");
         }
 
-        Fr? r = transcript.ChallengeScalar("r");
+        Fr r = transcript.ChallengeScalar("r");
 
         transcript.AppendPoint(D, "D");
-        Fr? t = transcript.ChallengeScalar("t");
+        Fr t = transcript.ChallengeScalar("t");
 
         Dictionary<byte[], Fr> eCoefficients = new();
-        Fr? g2OfT = Fr.Zero;
-        Fr? powerOfR = Fr.One;
+        Fr g2OfT = Fr.Zero;
+        Fr powerOfR = Fr.One;
 
         Dictionary<byte[], Banderwagon> cBySerialized = new();
 
         foreach (MultiProofVerifierQuery query in queries)
         {
-            Banderwagon? C = query.C;
-            int z = query.z.ToInt();
-            Fr? y = query.y;
-            Fr? eCoefficient = (powerOfR / t) - precomp.Domain[z];
-            byte[]? cSerialized = C.ToBytes();
+            Banderwagon C = query.C;
+            int z = (int)query.z.u0;
+            Fr y = query.y;
+            Fr eCoefficient = (powerOfR / t) - precomp.Domain[z];
+            byte[] cSerialized = C.ToBytes();
             cBySerialized[cSerialized] = C;
             if (!eCoefficients.ContainsKey(cSerialized))
             {
@@ -147,12 +148,12 @@ public class MultiProof
             elems[i] = cBySerialized[eCoefficients.Keys.ToArray()[i]];
         }
 
-        Banderwagon? E = VarBaseCommit(eCoefficients.Values.ToArray(), elems);
+        Banderwagon E = VarBaseCommit(eCoefficients.Values.ToArray(), elems);
         transcript.AppendPoint(E, "E");
 
-        Fr? yO = g2OfT;
-        Banderwagon? ipaCommitment = E - D;
-        Fr[]? inputPointVector = precomp.BarycentricFormulaConstants(t);
+        Fr yO = g2OfT;
+        Banderwagon ipaCommitment = E - D;
+        Fr[] inputPointVector = precomp.BarycentricFormulaConstants(t);
 
         VerifierQuery queryX = new VerifierQuery(ipaCommitment, t,
             inputPointVector, yO, ipaProof);

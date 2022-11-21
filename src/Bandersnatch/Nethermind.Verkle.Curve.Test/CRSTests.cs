@@ -46,4 +46,18 @@ public class CRSTests
             Assert.IsTrue(generator != point);
         }
     }
+
+    [Test]
+    public void TestCrsGenerator()
+    {
+        CRS x = CRS.GenerateCRS(256);
+
+        Banderwagon[]? crs = CRSStruct.GetCRS();
+        Banderwagon? generator = Banderwagon.Generator();
+
+        foreach (Banderwagon? point in crs)
+        {
+            Assert.IsTrue(generator != point);
+        }
+    }
 }

@@ -1,8 +1,9 @@
 using Nethermind.Field;
+using Nethermind.MontgomeryField;
 
 namespace Nethermind.Verkle.Curve;
-using Fp = FixedFiniteField<BandersnatchBaseFieldStruct>;
-using Fr = FixedFiniteField<BandersnatchScalarFieldStruct>;
+using Fp = FpE;
+using Fr = FrE;
 
 public class Banderwagon
 {
@@ -46,17 +47,18 @@ public class Banderwagon
         Fp? x = Fp.FromBytes(bytes.ToArray());
         if (x is null) return null;
 
-        Fp? y = AffinePoint.GetYCoordinate(x, true);
+        Fp? y = AffinePoint.GetYCoordinate(x.Value, true);
         if (y is null) return null;
 
-        return SubgroupCheck(x) != 1 ? null : (x, y);
+        return SubgroupCheck(x.Value) != 1 ? null : (x.Value, y.Value);
     }
 
     public static int SubgroupCheck(Fp x)
     {
-        Fp? res = Fp.Mul(x, x);
-        res = Fp.Mul(res, A).Neg();
-        res = Fp.Add(res, Fp.One);
+        Fp.MulMod(x, x, out Fp res);
+        Fp.MulMod(res, A, out res);
+        res = res.Neg();
+        Fp.Add(res, Fp.One, out res);
 
         return res.Legendre();
     }
@@ -68,14 +70,14 @@ public class Banderwagon
         Fp? x2 = y._point.X;
         Fp? y2 = y._point.Y;
 
-        if (x1.IsZero && y1.IsZero) return false;
+        if (x1.Value.IsZero && y1.Value.IsZero) return false;
 
-        if (x2.IsZero && y2.IsZero) return false;
+        if (x2.Value.IsZero && y2.Value.IsZero) return false;
 
         Fp? lhs = x1 * y2;
         Fp? rhs = x2 * y1;
 
-        return lhs == rhs;
+        return lhs.Value.Equals(rhs.Value);
     }
 
     public static Banderwagon Generator() => new Banderwagon(ExtendedPoint.Generator());
@@ -89,7 +91,7 @@ public class Banderwagon
 
     public byte[] MapToField()
     {
-        return _mapToField()?.ToBytes() ?? throw new Exception();
+        return _mapToField()?.ToBytes().ToArray() ?? throw new Exception();
     }
 
     public byte[] ToBytes()
@@ -101,7 +103,7 @@ public class Banderwagon
             x = affine.X.Neg();
         }
 
-        return x.ToBytesBigEndian();
+        return x.Value.ToBytesBigEndian().ToArray();
     }
 
     public static Banderwagon Double(Banderwagon p) => new(ExtendedPoint.Double(p._point));

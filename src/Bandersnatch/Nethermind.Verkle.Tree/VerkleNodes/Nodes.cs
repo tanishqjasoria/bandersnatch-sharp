@@ -1,10 +1,11 @@
 using System.Diagnostics;
 using Nethermind.Field;
+using Nethermind.MontgomeryField;
 using Nethermind.Verkle.Curve;
 using Nethermind.Verkle.Utils;
 
 namespace Nethermind.Verkle.Tree;
-using Fr = FixedFiniteField<BandersnatchScalarFieldStruct>;
+using Fr = FrE;
 
 public enum NodeType : byte
 {

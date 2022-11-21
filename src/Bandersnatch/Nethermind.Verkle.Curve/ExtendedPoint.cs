@@ -1,8 +1,9 @@
 using Nethermind.Field;
+using Nethermind.MontgomeryField;
 
 namespace Nethermind.Verkle.Curve;
-using Fp = FixedFiniteField<BandersnatchBaseFieldStruct>;
-using Fr = FixedFiniteField<BandersnatchScalarFieldStruct>;
+using Fp = FpE;
+using Fr = FrE;
 
 public class ExtendedPoint
 {
@@ -38,7 +39,7 @@ public class ExtendedPoint
         Z = Fp.One;
     }
 
-    public bool IsZero => X.IsZero && Y == Z && !Y.IsZero && T.IsZero;
+    public bool IsZero => X.IsZero && Y.Equals(Z) && !Y.IsZero && T.IsZero;
     public static ExtendedPoint Identity() => new(AffinePoint.Identity());
 
     public static ExtendedPoint Generator() => new(AffinePoint.Generator());
@@ -49,10 +50,10 @@ public class ExtendedPoint
         if (p.IsZero) return q.IsZero;
         if (q.IsZero) return false;
 
-        return (p.X * q.Z == p.Z * q.X) && (p.Y * q.Z == q.Y * p.Z);
+        return (p.X * q.Z).Equals(p.Z * q.X) && (p.Y * q.Z).Equals(q.Y * p.Z);
     }
 
-    public static ExtendedPoint Neg(ExtendedPoint p) => new(p.X.Neg(), p.Y, p.T.Neg(), p.Z);
+    public static ExtendedPoint Neg(ExtendedPoint p) => new ExtendedPoint(p.X.Neg(), p.Y, p.T.Neg(), p.Z);
     public static ExtendedPoint Add(ExtendedPoint p, ExtendedPoint q)
     {
         Fp? x1 = p.X;
@@ -80,7 +81,7 @@ public class ExtendedPoint
 
         Fp? g = d + c;
 
-        return new ExtendedPoint(e * f, g * h, e * h, f * g);
+        return new ExtendedPoint(e.Value * f.Value, g.Value * h.Value, e.Value * h.Value, f.Value * g.Value);
     }
     public static ExtendedPoint Sub(ExtendedPoint p, ExtendedPoint q) => Add(p, Neg(q));
     public static ExtendedPoint Double(ExtendedPoint p) => Add(p, p);
@@ -90,7 +91,7 @@ public class ExtendedPoint
         ExtendedPoint? result = Identity();
         ExtendedPoint? temp = point.Dup();
 
-        byte[]? bytes = scalar.ToBytes();
+        byte[] bytes = scalar.ToBytes().ToArray();
         // TODO: use BitLen to simplify this
         int carry = 0;
         foreach (byte elem in bytes)
@@ -129,12 +130,12 @@ public class ExtendedPoint
         if (Z.IsZero) throw new Exception();
         if (Z.IsOne) return new AffinePoint(X, Y);
 
-        Fp? zInv = Fp.Inverse(Z) ?? throw new Exception();
+        Fp.Inverse(Z, out FpE zInv);
 
         Fp? xAff = X * zInv;
         Fp? yAff = Y * zInv;
 
-        return new AffinePoint(xAff, yAff);
+        return new AffinePoint(xAff.Value, yAff.Value);
     }
 
     public byte[] ToBytes() => ToAffine().ToBytes();

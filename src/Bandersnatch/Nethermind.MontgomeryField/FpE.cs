@@ -23,7 +23,7 @@ public readonly struct FpE
     private const ulong one1 = 253265890806062196;
     private const ulong one2 = 11064306276430008312;
     private const ulong one3 = 1739710354780652911;
-    private static readonly FpE One = new FpE(one0, one1, one2, one3);
+    public static readonly FpE One = new FpE(one0, one1, one2, one3);
 
     private const  ulong q0 = 8429901452645165025;
     private const  ulong q1 = 18415085837358793841;
@@ -42,6 +42,12 @@ public readonly struct FpE
     private const ulong g2 = 11911047149493888393;
     private const ulong g3 = 436996551065533341;
     private static readonly FpE gResidue = new FpE(g0, g1, g2, g3);
+
+    private const ulong qM0 = 5415081136944170355;
+    private const ulong qM1 = 16923187137941795325;
+    private const ulong qM2 = 11911047149493888393;
+    private const ulong qM3 = 436996551065533341;
+    private static readonly FpE qMinOne = new FpE(qM0, qM1, qM2, qM3);
 
     public static Lazy<UInt256> _modulus = new Lazy<UInt256>(() =>
     {
@@ -97,6 +103,32 @@ public readonly struct FpE
         ElementUtils.FromBytes(bytes, isBigEndian, out u0, out u1, out u2, out u3);
     }
 
+    public FpE Dup()
+    {
+        return new FpE(u0, u1, u2, u3);
+    }
+
+    public FpE(BigInteger value)
+    {
+        if (value.Sign < 0)
+        {
+            SubMod(FpE.Zero, (FpE)(-value), out this);
+        }
+        else throw new ArgumentException();
+    }
+
+    public FpE Neg()
+    {
+        SubMod(FpE.Zero, this, out FpE res);
+        return res;
+    }
+
+    public bool LexicographicallyLargest()
+    {
+        FromMont(in this, out FpE mont);
+        return !SubtractUnderflow(mont, qMinOne, out FpE _);
+    }
+
     public Span<byte> ToBytes() => ElementUtils.ToLittleEndian(u0, u1, u2, u3);
     public Span<byte> ToBytesBigEndian() => ElementUtils.ToBigEndian(u0, u1, u2, u3);
 
@@ -117,7 +149,7 @@ public readonly struct FpE
 
     public bool IsOne => Equals(One);
 
-    public static bool Sqrt(in FpE x, out FpE z)
+    public static bool Sqrt(in FpE x, out FpE? z)
     {
         Exp(in x, _bSqrtExponentElement.Value, out var w);
         MulMod(x, w, out var y);
@@ -139,7 +171,7 @@ public readonly struct FpE
 
         if (!t.IsOne)
         {
-            z = Zero;
+            z = null;
             return false;
         }
 
@@ -150,7 +182,7 @@ public readonly struct FpE
 
             if (!t.IsOne)
             {
-                Sqrt(in t, out t);
+                MulMod(in t, in t, out t);
                 m++;
             }
 
@@ -178,6 +210,15 @@ public readonly struct FpE
     public static int Legendre(in FpE z)
     {
         Exp(z, _bLegendreExponentElement.Value, out FpE res);
+        if (res.IsZero) return 0;
+
+        if (res.IsOne) return 1;
+        return -1;
+    }
+
+    public int Legendre()
+    {
+        Exp(this, _bLegendreExponentElement.Value, out FpE res);
         if (res.IsZero) return 0;
 
         if (res.IsOne) return 1;
@@ -863,8 +904,6 @@ sh192:
 
     public int CompareTo(FpE b) => this < b ? -1 : Equals(b) ? 0 : 1;
 
-    public override bool Equals(object? obj) => obj is FpE other && Equals(other);
-
     public override int GetHashCode() => HashCode.Combine(u0, u1, u2, u3);
 
 
@@ -959,4 +998,10 @@ sh192:
     public bool Equals(long other) => other >= 0 && u0 == (ulong)other && u1 == 0 && u2 == 0 && u3 == 0;
 
     public bool Equals(ulong other) => u0 == other && u1 == 0 && u2 == 0 && u3 == 0;
+
+    public static FpE operator *(in FpE a, in FpE b)
+    {
+        MulMod(a, b, out FpE x);
+        return x;
+    }
 }

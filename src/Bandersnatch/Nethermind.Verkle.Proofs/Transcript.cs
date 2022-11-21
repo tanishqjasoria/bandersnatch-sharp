@@ -1,10 +1,11 @@
 using System.Security.Cryptography;
 using System.Text;
 using Nethermind.Field;
+using Nethermind.MontgomeryField;
 using Nethermind.Verkle.Curve;
 
 namespace Nethermind.Verkle.Proofs;
-using Fr = FixedFiniteField<BandersnatchScalarFieldStruct>;
+using Fr = FrE;
 
 public class Transcript
 {
@@ -36,7 +37,7 @@ public class Transcript
 
     public void AppendScalar(Fr scalar, IEnumerable<byte> label)
     {
-        AppendBytes(scalar.ToBytes(), label);
+        AppendBytes(scalar.ToBytes().ToArray(), label);
     }
     public void AppendScalar(Fr scalar, string label) => AppendScalar(scalar, Encoding.ASCII.GetBytes(label));
 
@@ -49,8 +50,8 @@ public class Transcript
     public Fr ChallengeScalar(byte[] label)
     {
         DomainSep(label);
-        byte[]? hash = SHA256.Create().ComputeHash(CurrentHash.ToArray());
-        Fr? challenge = ByteToField(hash);
+        byte[] hash = SHA256.Create().ComputeHash(CurrentHash.ToArray());
+        Fr challenge = ByteToField(hash);
         CurrentHash = new List<byte>();
 
         AppendScalar(challenge, label);

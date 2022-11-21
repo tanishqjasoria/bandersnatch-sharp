@@ -1,9 +1,10 @@
 using Nethermind.Field;
 using Nethermind.Int256;
+using Nethermind.MontgomeryField;
 using Nethermind.Verkle.Curve;
 
 namespace Nethermind.Verkle.Utils;
-using Fr = FixedFiniteField<BandersnatchScalarFieldStruct>;
+using Fr = FrE;
 
 public static class PedersenHash
 {
@@ -11,13 +12,13 @@ public static class PedersenHash
     public static byte[] Hash(UInt256[] inputElements)
     {
         int inputLength = inputElements.Length;
-        Fr[]? pedersenVec = new Fr[1 + 2 * inputLength];
-        pedersenVec[0] = new Fr(new UInt256((ulong)(2 + 256 * inputLength * 32)));
+        Fr[] pedersenVec = new Fr[1 + 2 * inputLength];
+        pedersenVec[0] = new Fr((ulong)(2 + 256 * inputLength * 32));
 
         for (int i = 0; i < inputElements.Length; i++)
         {
-            pedersenVec[2 * i + 1] = new Fr(new UInt256(inputElements[i].u0, inputElements[i].u1));
-            pedersenVec[2 * i + 2] = new Fr(new UInt256(inputElements[i].u2, inputElements[i].u3));
+            pedersenVec[2 * i + 1] = new Fr(inputElements[i].u0, inputElements[i].u1);
+            pedersenVec[2 * i + 2] = new Fr(inputElements[i].u2, inputElements[i].u3);
         }
         CRS crs = CRS.Default();
 
@@ -34,11 +35,11 @@ public static class PedersenHash
         UInt256 addressUInt256 = new UInt256(address32);
 
         Fr[]? pedersenVec = new Fr[5];
-        pedersenVec[0] = new Fr(new UInt256((2 + 256 * 64)));
-        pedersenVec[1] = new Fr(new UInt256(addressUInt256.u0, addressUInt256.u1));
-        pedersenVec[2] = new Fr(new UInt256(addressUInt256.u2, addressUInt256.u3));
-        pedersenVec[3] = new Fr(new UInt256(treeIndex.u0, treeIndex.u1));
-        pedersenVec[4] = new Fr(new UInt256(treeIndex.u2, treeIndex.u3));
+        pedersenVec[0] = new Fr((2 + 256 * 64));
+        pedersenVec[1] = new Fr(addressUInt256.u0, addressUInt256.u1);
+        pedersenVec[2] = new Fr(addressUInt256.u2, addressUInt256.u3);
+        pedersenVec[3] = new Fr(treeIndex.u0, treeIndex.u1);
+        pedersenVec[4] = new Fr(treeIndex.u2, treeIndex.u3);
 
         CRS crs = CRS.Default();
 

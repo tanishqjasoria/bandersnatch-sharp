@@ -1,8 +1,9 @@
 using Nethermind.Field;
+using Nethermind.MontgomeryField;
 
 namespace Nethermind.Verkle.Curve;
-using Fp = FixedFiniteField<BandersnatchBaseFieldStruct>;
-using Fr = FixedFiniteField<BandersnatchScalarFieldStruct>;
+using Fp = FpE;
+using Fr = FrE;
 
 
 public class AffinePoint
@@ -26,7 +27,7 @@ public class AffinePoint
     {
         Fp? yTe = CurveParams.YTe.Dup();
         Fp? xTe = CurveParams.XTe.Dup();
-        return new AffinePoint(xTe, yTe);
+        return new AffinePoint(xTe.Value, yTe.Value);
     }
 
     public static AffinePoint Neg(AffinePoint p)
@@ -36,10 +37,10 @@ public class AffinePoint
 
     public static AffinePoint Add(AffinePoint p, AffinePoint q)
     {
-        Fp? x1 = p.X;
-        Fp? y1 = p.Y;
-        Fp? x2 = q.X;
-        Fp? y2 = q.Y;
+        Fp x1 = p.X;
+        Fp y1 = p.Y;
+        Fp x2 = q.X;
+        Fp y2 = q.Y;
 
         Fp? x1y2 = x1 * y2;
         Fp? y1x2 = y1 * x2;
@@ -60,7 +61,7 @@ public class AffinePoint
 
         Fp? y = yNum / yDen ?? throw new Exception();
 
-        return new AffinePoint(x, y);
+        return new AffinePoint(x.Value, y.Value);
     }
 
     public static AffinePoint Sub(AffinePoint p, AffinePoint q)
@@ -87,12 +88,12 @@ public class AffinePoint
         Fp? rhs = one + dxySq;
         Fp? lhs = aXSq + ySq;
 
-        return lhs == rhs;
+        return lhs.Equals(rhs.Value);
     }
 
     public byte[] ToBytes()
     {
-        byte[]? xBytes = X.ToBytes();
+        byte[] xBytes = X.ToBytes().ToArray();
 
         byte mask = MCompressedPositive;
         if (Y.LexicographicallyLargest())
@@ -109,7 +110,7 @@ public class AffinePoint
         AffinePoint? result = Identity();
         AffinePoint? temp = point.Dup();
 
-        byte[]? bytes = scalar.ToBytes();
+        byte[]? bytes = scalar.ToBytes().ToArray();
 
         foreach (byte idx in bytes)
         {
@@ -141,13 +142,13 @@ public class AffinePoint
         if (y is null)
             return null;
 
-        y = Fp.Sqrt(y);
+        Fp.Sqrt(y.Value, out y);
         if (y is null)
             return null;
 
-        bool isLargest = y.LexicographicallyLargest();
+        bool isLargest = y.Value.LexicographicallyLargest();
 
-        return isLargest == returnPositiveY ? y : y.Neg();
+        return isLargest == returnPositiveY ? y : y.Value.Neg();
     }
 
     public static AffinePoint operator +(in AffinePoint a, in AffinePoint b)
@@ -182,7 +183,7 @@ public class AffinePoint
 
     private bool Equals(AffinePoint a)
     {
-        return X == a.X && Y == a.Y;
+        return X.Equals(a.X) && Y.Equals(a.Y);
     }
 
     public override bool Equals(object? obj)

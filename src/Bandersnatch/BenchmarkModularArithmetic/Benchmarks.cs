@@ -277,9 +277,9 @@ public class Sqrt: ThreeParamBenchmarkBase
     }
 
     [Benchmark]
-    public TestElement Sqrt_Element()
+    public TestElement? Sqrt_Element()
     {
-        TestElement.Sqrt(A.Item3, out FpE res);
+        TestElement.Sqrt(A.Item3, out FpE? res);
         return res;
     }
 }

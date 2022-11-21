@@ -2,12 +2,13 @@ using System;
 using System.IO;
 using FluentAssertions;
 using Nethermind.Field;
+using Nethermind.MontgomeryField;
 using Nethermind.Verkle.Curve;
 using Nethermind.Verkle.Db;
 using NUnit.Framework;
 
 namespace Nethermind.Verkle.Tree.Test;
-using Fr = FixedFiniteField<BandersnatchScalarFieldStruct>;
+using Fr = FrE;
 
 [TestFixture, Parallelizable(ParallelScope.All)]
 public class VerkleTreeTests
@@ -210,7 +211,7 @@ public class VerkleTreeTests
     public void TestEmptyTrie(DbMode dbMode)
     {
         VerkleTree tree = GetVerkleTreeForTest(dbMode);
-        tree.RootHash.Should().BeEquivalentTo(Fr.Zero.ToBytes());
+        tree.RootHash.Should().BeEquivalentTo(Fr.Zero.ToBytes().ToArray());
     }
 
     [TestCase(DbMode.MemDb)]

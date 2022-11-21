@@ -1,9 +1,10 @@
 using System.Diagnostics;
 using Nethermind.Field;
+using Nethermind.MontgomeryField;
 using Nethermind.Verkle.Curve;
 
 namespace Nethermind.Verkle.Utils;
-using Fr = FixedFiniteField<BandersnatchScalarFieldStruct>;
+using Fr = FrE;
 
 public struct Committer
 {
@@ -36,7 +37,7 @@ public class Commitment
         {
             if (_pointAsField is null) SetCommitmentToField();
             Debug.Assert(_pointAsField is not null, nameof(_pointAsField) + " != null");
-            return _pointAsField;
+            return _pointAsField.Value;
         }
         private set => _pointAsField = value;
     }

@@ -23,7 +23,7 @@ public readonly struct FrE
     private const ulong one1 = 6378425256633387010;
     private const ulong one2 = 11064306276430008309;
     private const ulong one3 = 1739710354780652911;
-    private static readonly FrE One = new FrE(one0, one1, one2, one3);
+    public static readonly FrE One = new FrE(one0, one1, one2, one3);
 
     private const  ulong q0 = 18446744069414584321;
     private const  ulong q1 = 6034159408538082302;
@@ -42,6 +42,12 @@ public readonly struct FrE
     private const ulong g2 = 967625415375836421;
     private const ulong g3 = 4543825880697944938;
     private static readonly FrE gResidue = new FrE(g0, g1, g2, g3);
+
+    private const ulong qM0 = 5415081136944170355;
+    private const ulong qM1 = 16923187137941795325;
+    private const ulong qM2 = 11911047149493888393;
+    private const ulong qM3 = 436996551065533341;
+    private static readonly FrE qMinOne = new FrE(qM0, qM1, qM2, qM3);
 
     private static Lazy<UInt256> _modulus = new Lazy<UInt256>(() =>
     {
@@ -90,6 +96,32 @@ public readonly struct FrE
         this.u1 = u1;
         this.u2 = u2;
         this.u3 = u3;
+    }
+
+    public FrE Dup()
+    {
+        return new FrE(u0, u1, u2, u3);
+    }
+
+    public FrE(BigInteger value)
+    {
+        if (value.Sign < 0)
+        {
+            SubMod(FrE.Zero, (FrE)(-value), out this);
+        }
+        else throw new ArgumentException();
+    }
+
+    public FrE Neg()
+    {
+        SubMod(FrE.Zero, this, out FrE res);
+        return res;
+    }
+
+    public bool LexicographicallyLargest()
+    {
+        FromMont(in this, out FrE mont);
+        return !SubtractUnderflow(mont, qMinOne, out FrE _);
     }
 
     public FrE(in ReadOnlySpan<byte> bytes, bool isBigEndian = false)
@@ -864,8 +896,6 @@ sh192:
 
     public int CompareTo(FrE b) => this < b ? -1 : Equals(b) ? 0 : 1;
 
-    public override bool Equals(object? obj) => obj is FrE other && Equals(other);
-
     public override int GetHashCode() => HashCode.Combine(u0, u1, u2, u3);
 
 
@@ -960,4 +990,10 @@ sh192:
     public bool Equals(long other) => other >= 0 && u0 == (ulong)other && u1 == 0 && u2 == 0 && u3 == 0;
 
     public bool Equals(ulong other) => u0 == other && u1 == 0 && u2 == 0 && u3 == 0;
+
+    public static FrE operator *(in FrE a, in FrE b)
+    {
+        MulMod(a, b, out FrE x);
+        return x;
+    }
 }

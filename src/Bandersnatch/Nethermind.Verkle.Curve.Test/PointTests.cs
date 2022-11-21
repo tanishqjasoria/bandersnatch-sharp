@@ -2,10 +2,11 @@ using System;
 using FluentAssertions;
 using Nethermind.Field;
 using Nethermind.Int256;
+using Nethermind.MontgomeryField;
 using NUnit.Framework;
 
 namespace Nethermind.Verkle.Curve.Test;
-using Fr = FixedFiniteField<BandersnatchScalarFieldStruct>;
+using Fr = FrE;
 
 public class PointTests
 {
@@ -56,10 +57,10 @@ public class PointTests
     [Test]
     public void TestScalarMulSmoke()
     {
-        ExtendedPoint? gen = ExtendedPoint.Generator();
-        Fr? scalar = new Fr((UInt256)2);
-        ExtendedPoint? result = gen * scalar;
-        ExtendedPoint? twoGen = ExtendedPoint.Double(gen);
+        ExtendedPoint gen = ExtendedPoint.Generator();
+        Fr scalar = new Fr((ulong)2);
+        ExtendedPoint result = gen * scalar;
+        ExtendedPoint twoGen = ExtendedPoint.Double(gen);
         Assert.IsTrue(twoGen == result);
     }
 
@@ -69,9 +70,9 @@ public class PointTests
         ExtendedPoint? gen = ExtendedPoint.Generator();
 
         const int x = -1;
-        Fr? scalar = new Fr(x);
-        ExtendedPoint? result = gen * scalar;
-        byte[]? serialized = result.ToBytes();
+        Fr scalar = new Fr(x);
+        ExtendedPoint result = gen * scalar;
+        byte[] serialized = result.ToBytes();
         const string expected = "e951ad5d98e7181e99d76452e0e343281295e38d90c602bf824892fd86742c4a";
         Convert.ToHexString(serialized).Should().BeEquivalentTo(expected);
     }
