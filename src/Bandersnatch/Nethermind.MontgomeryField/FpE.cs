@@ -34,7 +34,7 @@ public readonly struct FpE
         12294384630081346794,
         785759240370973821,
     };
-    private static Lazy<BigInteger> _modulus = new Lazy<BigInteger>(() =>
+    public static Lazy<BigInteger> _modulus = new Lazy<BigInteger>(() =>
     {
         BigInteger.TryParse("13108968793781547619861935127046491459309155893440570251786403306729687672801", out BigInteger output);
         return output;

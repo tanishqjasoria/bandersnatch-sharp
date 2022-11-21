@@ -20,5 +20,6 @@
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\Nethermind.Field\Nethermind.Field.csproj" />
+      <ProjectReference Include="..\Nethermind.MontgomeryField\Nethermind.MontgomeryField.csproj" />
     </ItemGroup>
 </Project>
