@@ -94,7 +94,23 @@ public readonly struct Element
 
     public Element(in ReadOnlySpan<byte> bytes, bool isBigEndian = false)
     {
-        FromBytes(bytes, isBigEndian, out u0, out u1, out u2, out u3);
+        ElementUtils.FromBytes(bytes, isBigEndian, out u0, out u1, out u2, out u3);
+    }
+
+    public Span<byte> ToBytes() => ElementUtils.ToLittleEndian(u0, u1, u2, u3);
+    public Span<byte> ToBytesBigEndian() => ElementUtils.ToBigEndian(u0, u1, u2, u3);
+
+    public static Element? FromBytes(byte[] byteEncoded, bool isBigEndian=false)
+    {
+        ElementUtils.FromBytes(byteEncoded, isBigEndian, out ulong u0, out ulong u1, out ulong u2, out ulong u3);
+        Element item = new Element(u0, u1, u2, u3);
+        return item > qElement ? null : item;
+    }
+
+    public static Element FromBytesReduced(byte[] byteEncoded, bool isBigEndian=false)
+    {
+        ElementUtils.FromBytes(byteEncoded, isBigEndian, out ulong u0, out ulong u1, out ulong u2, out ulong u3);
+        return new Element(u0, u1, u2, u3);
     }
 
     public bool IsZero => (u0 | u1 | u2 | u3) == 0;
@@ -798,97 +814,6 @@ sh192:
         AddWithCarry(lo, c, ref carry, out lo);
         AddWithCarry(hi, e, ref carry, out hi);
         return (hi, lo);
-    }
-
-    private static void FromBytes(in ReadOnlySpan<byte> bytes, bool isBigEndian, out ulong u0, out ulong u1, out ulong u2, out ulong u3)
-    {
-        if (bytes.Length == 32)
-        {
-            if (isBigEndian)
-            {
-                u3 = BinaryPrimitives.ReadUInt64BigEndian(bytes.Slice(0, 8));
-                u2 = BinaryPrimitives.ReadUInt64BigEndian(bytes.Slice(8, 8));
-                u1 = BinaryPrimitives.ReadUInt64BigEndian(bytes.Slice(16, 8));
-                u0 = BinaryPrimitives.ReadUInt64BigEndian(bytes.Slice(24, 8));
-            }
-            else
-            {
-                u0 = BinaryPrimitives.ReadUInt64LittleEndian(bytes.Slice(0, 8));
-                u1 = BinaryPrimitives.ReadUInt64LittleEndian(bytes.Slice(8, 8));
-                u2 = BinaryPrimitives.ReadUInt64LittleEndian(bytes.Slice(16, 8));
-                u3 = BinaryPrimitives.ReadUInt64LittleEndian(bytes.Slice(24, 8));
-            }
-        }
-        else
-        {
-            int byteCount = bytes.Length;
-            int unalignedBytes = byteCount % 8;
-            int dwordCount = byteCount / 8 + (unalignedBytes == 0 ? 0 : 1);
-
-            ulong cs0 = 0;
-            ulong cs1 = 0;
-            ulong cs2 = 0;
-            ulong cs3 = 0;
-
-            if (dwordCount == 0)
-            {
-                u0 = u1 = u2 = u3 = 0;
-                return;
-            }
-
-            if (dwordCount >= 1)
-            {
-                for (int j = 8; j > 0; j--)
-                {
-                    cs0 <<= 8;
-                    if (j <= byteCount)
-                    {
-                        cs0 |= bytes[byteCount - j];
-                    }
-                }
-            }
-
-            if (dwordCount >= 2)
-            {
-                for (int j = 16; j > 8; j--)
-                {
-                    cs1 <<= 8;
-                    if (j <= byteCount)
-                    {
-                        cs1 |= bytes[byteCount - j];
-                    }
-                }
-            }
-
-            if (dwordCount >= 3)
-            {
-                for (int j = 24; j > 16; j--)
-                {
-                    cs2 <<= 8;
-                    if (j <= byteCount)
-                    {
-                        cs2 |= bytes[byteCount - j];
-                    }
-                }
-            }
-
-            if (dwordCount >= 4)
-            {
-                for (int j = 32; j > 24; j--)
-                {
-                    cs3 <<= 8;
-                    if (j <= byteCount)
-                    {
-                        cs3 |= bytes[byteCount - j];
-                    }
-                }
-            }
-
-            u0 = cs0;
-            u1 = cs1;
-            u2 = cs2;
-            u3 = cs3;
-        }
     }
 
     public static implicit operator Element(ulong value) => new Element(value, 0ul, 0ul, 0ul);
