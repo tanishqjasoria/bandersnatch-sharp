@@ -56,7 +56,7 @@ public class VerkleTree
 
     private void UpdateRootNode(Banderwagon rootDelta)
     {
-        InternalNode root = _stateDb.GetBranch(Array.Empty<byte>())?? throw new ArgumentException();
+        InternalNode root = _stateDb.GetBranch(Array.Empty<byte>()) ?? throw new ArgumentException();
         root._internalCommitment.AddPoint(rootDelta);
     }
 
@@ -165,7 +165,7 @@ public class VerkleTree
             return (internalCommitment - oldSuffixNode.ExtensionCommitment.Point, true);
         }
 
-        SuffixTree oldValue = _stateDb.GetStem(traverseContext.Stem.ToArray())?? throw new ArgumentException();
+        SuffixTree oldValue = _stateDb.GetStem(traverseContext.Stem.ToArray()) ?? throw new ArgumentException();
         Fr deltaFr = oldValue.UpdateCommitment(traverseContext.LeafUpdateDelta);
         _stateDb.SetStem(traverseContext.Stem.ToArray(), oldValue);
 
@@ -192,7 +192,7 @@ public class VerkleTree
 
     private (Fr, Commitment?) UpdateSuffixNode(byte[] stemKey, LeafUpdateDelta leafUpdateDelta, bool insertNew = false)
     {
-        SuffixTree oldNode = insertNew ? new SuffixTree(stemKey) : _stateDb.GetStem(stemKey)?? throw new ArgumentException();
+        SuffixTree oldNode = insertNew ? new SuffixTree(stemKey) : _stateDb.GetStem(stemKey) ?? throw new ArgumentException();
 
         Fr deltaFr = oldNode.UpdateCommitment(leafUpdateDelta);
         _stateDb.SetStem(stemKey, oldNode);

@@ -86,7 +86,7 @@ public class VerkleTreeTests
         string dbPath = GetDbPathForTest();
         if (Directory.Exists(dbPath))
         {
-            Directory.Delete(dbPath,true);
+            Directory.Delete(dbPath, true);
         }
     }
 

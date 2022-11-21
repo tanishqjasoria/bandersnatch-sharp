@@ -9,7 +9,7 @@ using Nethermind.Verkle.Tree.VerkleNodes;
 
 namespace Nethermind.Verkle.Tree.VerkleStateDb;
 
-public class DiskDb: IVerkleDb
+public class DiskDb : IVerkleDb
 {
     private readonly IDbProvider _dbProvider;
 
