@@ -2,8 +2,8 @@
 // Licensed under Apache-2.0. For full terms, see LICENSE in the project root.
 
 using System.Collections.Generic;
-using System.Numerics;
 using System.Linq;
+using System.Numerics;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using Nethermind.Field;
