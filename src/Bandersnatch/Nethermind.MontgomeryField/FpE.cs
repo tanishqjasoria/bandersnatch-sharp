@@ -12,40 +12,52 @@ namespace Nethermind.MontgomeryField;
 [StructLayout(LayoutKind.Explicit)]
 public readonly struct FpE
 {
-    public static readonly FpE Zero = 0ul;
-    public static readonly FpE One = new ulong[]
-    {
-        6347764673676886264,
-        253265890806062196,
-        11064306276430008312,
-        1739710354780652911
-    };
-    public static readonly FpE qFpE = new ulong[]
-    {
-        8429901452645165025,
-        18415085837358793841,
-        922804724659942912,
-        2088379214866112338
-    };
-    public static readonly FpE rSquare = new ulong[]
-    {
-        15831548891076708299,
-        4682191799977818424,
-        12294384630081346794,
-        785759240370973821,
-    };
-    public static Lazy<BigInteger> _modulus = new Lazy<BigInteger>(() =>
-    {
-        BigInteger.TryParse("13108968793781547619861935127046491459309155893440570251786403306729687672801", out BigInteger output);
-        return output;
-    });
-
-    public static ulong qInvNeg = 17410672245482742751;
     const int Limbs = 4;
     const int Bits = 253;
     const int Bytes = Limbs * 8;
+    const ulong qInvNeg = 17410672245482742751;
 
+    public static readonly FpE Zero = new FpE(0, 0, 0, 0);
 
+    private const ulong one0 = 6347764673676886264;
+    private const ulong one1 = 253265890806062196;
+    private const ulong one2 = 11064306276430008312;
+    private const ulong one3 = 1739710354780652911;
+    private static readonly FpE One = new FpE(one0, one1, one2, one3);
+
+    private const  ulong q0 = 8429901452645165025;
+    private const  ulong q1 = 18415085837358793841;
+    private const  ulong q2 = 922804724659942912;
+    private const  ulong q3 = 2088379214866112338;
+    private static readonly FpE qElement = new FpE(q0, q1, q2, q3);
+
+    private  const ulong r0 = 15831548891076708299;
+    private  const ulong r1 = 4682191799977818424;
+    private  const ulong r2 = 12294384630081346794;
+    private  const ulong r3 = 785759240370973821;
+    private static readonly FpE rSquare = new FpE(r0, r1, r2, r3);
+
+    private const ulong g0 = 5415081136944170355;
+    private const ulong g1 = 16923187137941795325;
+    private const ulong g2 = 11911047149493888393;
+    private const ulong g3 = 436996551065533341;
+    private static readonly FpE gResidue = new FpE(g0, g1, g2, g3);
+
+    public static Lazy<UInt256> _modulus = new Lazy<UInt256>(() =>
+    {
+        UInt256.TryParse("13108968793781547619861935127046491459309155893440570251786403306729687672801", out UInt256 output);
+        return output;
+    });
+    public static Lazy<UInt256> _bLegendreExponentElement = new Lazy<UInt256>(() =>
+    {
+        UInt256.TryParse("e7db4ea6533afa906673b0101343b007fc7c3803a0c8238ba7e835a943b73f0", out UInt256 output);
+        return output;
+    });
+    public static Lazy<UInt256> _bSqrtExponentElement = new Lazy<UInt256>(() =>
+    {
+        UInt256.TryParse("73eda753299d7d483339d80809a1d803fe3e1c01d06411c5d3f41ad4a1db9f", out UInt256 output);
+        return output;
+    });
 
     /* in little endian order so u3 is the most significant ulong */
     [FieldOffset(0)]
@@ -89,6 +101,177 @@ public readonly struct FpE
 
     public bool IsOne => Equals(One);
 
+    public static bool Sqrt(in FpE x, out FpE z)
+    {
+        Exp(in x, _bSqrtExponentElement.Value, out var w);
+        MulMod(x, w, out var y);
+        MulMod(w, y, out var b);
+
+        ulong r = 5;
+        FpE t = b;
+
+        for (ulong i = 0; i < r - 1; i++)
+        {
+            MulMod(in t, in t, out t);
+        }
+
+        if (t.IsZero)
+        {
+            z = Zero;
+            return true;
+        }
+
+        if (!t.IsOne)
+        {
+            z = Zero;
+            return false;
+        }
+
+        while (true)
+        {
+            ulong m = 0;
+            t = b;
+
+            if (!t.IsOne)
+            {
+                Sqrt(in t, out t);
+                m++;
+            }
+
+            if (m == 0)
+            {
+                z = y;
+                return true;
+            }
+            int ge = (int)(r - m - 1);
+            t = gResidue;
+
+            while (ge > 0)
+            {
+                MulMod(in t, in t, out t);
+                ge--;
+            }
+
+            MulMod(in t, in t, out FpE g);
+            MulMod(in y, in t, out y);
+            MulMod(in b, in g, out b);
+            r = m;
+        }
+    }
+
+    public static int Legendre(in FpE z)
+    {
+        Exp(z, _bLegendreExponentElement.Value, out FpE res);
+        if (res.IsZero) return 0;
+
+        if (res.IsOne) return 1;
+        return -1;
+    }
+
+    public static void Exp(in FpE b, in UInt256 e, out FpE result)
+    {
+        result = One;
+        FpE bs = b;
+        int len = e.BitLen;
+        for (int i = 0; i < len; i++)
+        {
+            if (e.Bit(i))
+            {
+                MulMod(result, bs, out result);
+            }
+            MulMod(bs, bs, out bs);
+        }
+    }
+
+    public static FpE[] MultiInverse(FpE[] values)
+    {
+        if (values.Length == 0) return Array.Empty<FpE>();
+
+        FpE[] results = new FpE[values.Length];
+        bool[] zeros = new bool[values.Length];
+
+        FpE accumulator = One;
+
+        for (int i = 0; i < values.Length; i++)
+        {
+            if (values[i].IsZero)
+            {
+                zeros[i] = true;
+                continue;
+            }
+            results[i] = accumulator;
+            MulMod(in accumulator, in values[i], out accumulator);
+        }
+
+        Inverse(in accumulator, out accumulator);
+
+        for (int i = values.Length - 1; i >= 0; i--)
+        {
+            if(zeros[i]) continue;
+            MulMod(in results[i], in accumulator, out results[i]);
+            MulMod(in accumulator, in values[i], out accumulator);
+        }
+
+        return values;
+    }
+
+    public static void ToMont(in FpE x, out FpE z)
+    {
+        MulMod(x, rSquare, out z);
+    }
+
+    public static void ToRegular(in FpE x, out FpE z)
+    {
+        FromMont(in x, out z);
+    }
+
+    public static void FromMont(in FpE x, out FpE res)
+    {
+        ulong[] z = new ulong[4];
+        z[0] = x[0];
+        z[1] = x[1];
+        z[2] = x[2];
+        z[3] = x[3];
+        ulong m, C;
+
+        m = z[0] * qInvNeg;
+        C = MAdd0(m, q0, z[0]);
+        (C, z[0]) = MAdd2(m, q1, z[1], C);
+        (C, z[1]) = MAdd2(m, q2, z[2], C);
+        (C, z[2]) = MAdd2(m, q3, z[3], C);
+        z[3] = C;
+
+        m = z[0] * qInvNeg;
+        C = MAdd0(m, q0, z[0]);
+        (C, z[0]) = MAdd2(m, q1, z[1], C);
+        (C, z[1]) = MAdd2(m, q2, z[2], C);
+        (C, z[2]) = MAdd2(m, q3, z[3], C);
+        z[3] = C;
+
+        m = z[0] * qInvNeg;
+        C = MAdd0(m, q0, z[0]);
+        (C, z[0]) = MAdd2(m, q1, z[1], C);
+        (C, z[1]) = MAdd2(m, q2, z[2], C);
+        (C, z[2]) = MAdd2(m, q3, z[3], C);
+        z[3] = C;
+
+        m = z[0] * qInvNeg;
+        C = MAdd0(m, q0, z[0]);
+        (C, z[0]) = MAdd2(m, q1, z[1], C);
+        (C, z[1]) = MAdd2(m, q2, z[2], C);
+        (C, z[2]) = MAdd2(m, q3, z[3], C);
+        z[3] = C;
+
+        if (LessThan(qElement, z))
+        {
+            ulong b = 0;
+            SubtractWithBorrow(z[0], q0, ref b, out z[0]);
+            SubtractWithBorrow(z[1], q1, ref b, out z[1]);
+            SubtractWithBorrow(z[2], q2, ref b, out z[2]);
+            SubtractWithBorrow(z[3], q3, ref b, out z[3]);
+        }
+        res = z;
+    }
 
 
     public static void Inverse(in FpE x, out FpE z)
@@ -99,30 +282,10 @@ public readonly struct FpE
             return;
         }
 
-        // modulus
-        FpE q = new FpE(
-            8429901452645165025UL,
-            18415085837358793841UL,
-            922804724659942912UL,
-            2088379214866112338UL
-        );
-
         // initialize u = q
-        FpE u = new FpE(
-            8429901452645165025UL,
-            18415085837358793841UL,
-            922804724659942912UL,
-            2088379214866112338UL
-        );
-
+        FpE u = qElement;
         // initialize s = r^2
-        FpE s = new FpE(
-            15831548891076708299,
-            4682191799977818424,
-            12294384630081346794,
-            785759240370973821
-        );
-
+        FpE s = rSquare;
         FpE r = new FpE();
         FpE v = x;
 
@@ -132,26 +295,26 @@ public readonly struct FpE
             while ((v[0] & 1) == 0)
             {
                 v >>= 1;
-                if ((s[0] & 1) == 1) s += q;
+                if ((s[0] & 1) == 1) s += qElement;
                 s >>= 1;
             }
 
             while ((u[0] & 1) == 0)
             {
                 u >>= 1;
-                if ((r[0] & 1) == 1) r += q;
+                if ((r[0] & 1) == 1) r += qElement;
                 r >>= 1;
             }
 
             if (!LessThan(v, u))
             {
                 v -= u;
-                if (SubtractUnderflow(s, r, out s)) s += q;
+                if (SubtractUnderflow(s, r, out s)) s += qElement;
             }
             else
             {
                 u -= v;
-                if (SubtractUnderflow(r, s, out r)) r += q;
+                if (SubtractUnderflow(r, s, out r)) r += qElement;
             }
 
 
@@ -181,26 +344,26 @@ public readonly struct FpE
             ulong v = x[0];
             (c[1], c[0]) = Multiply64(v, y[0]);
             ulong m = c[0] * qInvNeg;
-            c[2] = MAdd0(m, qFpE[0], c[0]);
+            c[2] = MAdd0(m, q0, c[0]);
             (c[1], c[0]) = MAdd1(v, y[1], c[1]);
-            (c[2], t[0]) = MAdd2(m, qFpE[1], c[2], c[0]);
+            (c[2], t[0]) = MAdd2(m, q1, c[2], c[0]);
             (c[1], c[0]) = MAdd1(v, y[2], c[1]);
-            (c[2], t[1]) = MAdd2(m, qFpE[2], c[2], c[0]);
+            (c[2], t[1]) = MAdd2(m, q2, c[2], c[0]);
             (c[1], c[0]) = MAdd1(v, y[3], c[1]);
-            (t[3], t[2]) = MAdd3(m, qFpE[3], c[0], c[2], c[1]);
+            (t[3], t[2]) = MAdd3(m, q3, c[0], c[2], c[1]);
         }
         {
             // round 1
             ulong v = x[1];
             (c[1], c[0]) = MAdd1(v, y[0], t[0]);
             ulong m = (c[0] * qInvNeg);
-            c[2] = MAdd0(m, qFpE[0], c[0]);
+            c[2] = MAdd0(m, q0, c[0]);
             (c[1], c[0]) = MAdd2(v, y[1], c[1], t[1]);
-            (c[2], t[0]) = MAdd2(m, qFpE[1], c[2], c[0]);
+            (c[2], t[0]) = MAdd2(m, q1, c[2], c[0]);
             (c[1], c[0]) = MAdd2(v, y[2], c[1], t[2]);
-            (c[2], t[1]) = MAdd2(m, qFpE[2], c[2], c[0]);
+            (c[2], t[1]) = MAdd2(m, q2, c[2], c[0]);
             (c[1], c[0]) = MAdd2(v, y[3], c[1], t[3]);
-            (t[3], t[2]) = MAdd3(m, qFpE[3], c[0], c[2], c[1]);
+            (t[3], t[2]) = MAdd3(m, q3, c[0], c[2], c[1]);
         }
         {
             // round 2
@@ -208,13 +371,13 @@ public readonly struct FpE
             ulong v = x[2];
             (c[1], c[0]) = MAdd1(v, y[0], t[0]);
             ulong m = (c[0] * qInvNeg);
-            c[2] = MAdd0(m, qFpE[0], c[0]);
+            c[2] = MAdd0(m, q0, c[0]);
             (c[1], c[0]) = MAdd2(v, y[1], c[1], t[1]);
-            (c[2], t[0]) = MAdd2(m, qFpE[1], c[2], c[0]);
+            (c[2], t[0]) = MAdd2(m, q1, c[2], c[0]);
             (c[1], c[0]) = MAdd2(v, y[2], c[1], t[2]);
-            (c[2], t[1]) = MAdd2(m, qFpE[2], c[2], c[0]);
+            (c[2], t[1]) = MAdd2(m, q2, c[2], c[0]);
             (c[1], c[0]) = MAdd2(v, y[3], c[1], t[3]);
-            (t[3], t[2]) = MAdd3(m, qFpE[3], c[0], c[2], c[1]);
+            (t[3], t[2]) = MAdd3(m, q3, c[0], c[2], c[1]);
         }
         {
             // round 3
@@ -222,21 +385,21 @@ public readonly struct FpE
             ulong v = x[3];
             (c[1], c[0]) = MAdd1(v, y[0], t[0]);
             ulong m = (c[0] * qInvNeg);
-            c[2] = MAdd0(m, qFpE[0], c[0]);
+            c[2] = MAdd0(m, q0, c[0]);
             (c[1], c[0]) = MAdd2(v, y[1], c[1], t[1]);
-            (c[2], z[0]) = MAdd2(m, qFpE[1], c[2], c[0]);
+            (c[2], z[0]) = MAdd2(m, q1, c[2], c[0]);
             (c[1], c[0]) = MAdd2(v, y[2], c[1], t[2]);
-            (c[2], z[1]) = MAdd2(m, qFpE[2], c[2], c[0]);
+            (c[2], z[1]) = MAdd2(m, q2, c[2], c[0]);
             (c[1], c[0]) = MAdd2(v, y[3], c[1], t[3]);
-            (z[3], z[2]) = MAdd3(m, qFpE[3], c[0], c[2], c[1]);
+            (z[3], z[2]) = MAdd3(m, q3, c[0], c[2], c[1]);
         }
-        if (LessThan(qFpE, z))
+        if (LessThan(qElement, z))
         {
             ulong b = 0;
-            SubtractWithBorrow(z[0], qFpE[0], ref b, out z[0]);
-            SubtractWithBorrow(z[1], qFpE[1], ref b, out z[1]);
-            SubtractWithBorrow(z[2], qFpE[2], ref b, out z[2]);
-            SubtractWithBorrow(z[3], qFpE[3], ref b, out z[3]);
+            SubtractWithBorrow(z[0], q0, ref b, out z[0]);
+            SubtractWithBorrow(z[1], q1, ref b, out z[1]);
+            SubtractWithBorrow(z[2], q2, ref b, out z[2]);
+            SubtractWithBorrow(z[3], q3, ref b, out z[3]);
         }
         res = z;
     }
@@ -244,8 +407,8 @@ public readonly struct FpE
     public static void AddMod(in FpE a, in FpE b, out FpE res)
     {
         Add(a, b, out FpE z);
-        if (LessThan(qFpE, z))
-            res = z - qFpE;
+        if (LessThan(qElement, z))
+            res = z - qElement;
         else
             res = z;
 
@@ -253,7 +416,7 @@ public readonly struct FpE
 
     public static void SubMod(in FpE a, in FpE b, out FpE res)
     {
-        if (SubtractUnderflow(a, b, out res)) res += qFpE;
+        if (SubtractUnderflow(a, b, out res)) res += qElement;
     }
 
     public static void Divide(in FpE x, in FpE y, out FpE z)
@@ -350,7 +513,6 @@ sh192:
         int position = n % 64;
         return (this[bucket] & ((ulong)1 << position)) != 0;
     }
-
     public int BitLen =>
         u3 != 0
             ? 192 + Len64(u3)
