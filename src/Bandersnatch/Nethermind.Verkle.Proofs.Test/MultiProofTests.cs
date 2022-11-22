@@ -15,38 +15,38 @@ public class MultiProofTests
 {
     private readonly Fr[] _poly =
     {
-        new Fr((ulong) 1),
-        new Fr((ulong) 2),
-        new Fr((ulong) 3),
-        new Fr((ulong) 4),
-        new Fr((ulong) 5),
-        new Fr((ulong) 6),
-        new Fr((ulong) 7),
-        new Fr((ulong) 8),
-        new Fr((ulong) 9),
-        new Fr((ulong) 10),
-        new Fr((ulong) 11),
-        new Fr((ulong) 12),
-        new Fr((ulong) 13),
-        new Fr((ulong) 14),
-        new Fr((ulong) 15),
-        new Fr((ulong) 16),
-        new Fr((ulong) 17),
-        new Fr((ulong) 18),
-        new Fr((ulong) 19),
-        new Fr((ulong) 20),
-        new Fr((ulong) 21),
-        new Fr((ulong) 22),
-        new Fr((ulong) 23),
-        new Fr((ulong) 24),
-        new Fr((ulong) 25),
-        new Fr((ulong) 26),
-        new Fr((ulong) 27),
-        new Fr((ulong) 28),
-        new Fr((ulong) 29),
-        new Fr((ulong) 30),
-        new Fr((ulong) 31),
-        new Fr((ulong) 32),
+        FrE.SetElement((ulong) 1),
+        FrE.SetElement((ulong) 2),
+        FrE.SetElement((ulong) 3),
+        FrE.SetElement((ulong) 4),
+        FrE.SetElement((ulong) 5),
+        FrE.SetElement((ulong) 6),
+        FrE.SetElement((ulong) 7),
+        FrE.SetElement((ulong) 8),
+        FrE.SetElement((ulong) 9),
+        FrE.SetElement((ulong) 10),
+        FrE.SetElement((ulong) 11),
+        FrE.SetElement((ulong) 12),
+        FrE.SetElement((ulong) 13),
+        FrE.SetElement((ulong) 14),
+        FrE.SetElement((ulong) 15),
+        FrE.SetElement((ulong) 16),
+        FrE.SetElement((ulong) 17),
+        FrE.SetElement((ulong) 18),
+        FrE.SetElement((ulong) 19),
+        FrE.SetElement((ulong) 20),
+        FrE.SetElement((ulong) 21),
+        FrE.SetElement((ulong) 22),
+        FrE.SetElement((ulong) 23),
+        FrE.SetElement((ulong) 24),
+        FrE.SetElement((ulong) 25),
+        FrE.SetElement((ulong) 26),
+        FrE.SetElement((ulong) 27),
+        FrE.SetElement((ulong) 28),
+        FrE.SetElement((ulong) 29),
+        FrE.SetElement((ulong) 30),
+        FrE.SetElement((ulong) 31),
+        FrE.SetElement((ulong) 32),
     };
 
     [Test]
@@ -69,7 +69,7 @@ public class MultiProofTests
             Fr.Zero,
             Fr.Zero
         };
-        Fr[] ys = { new Fr((ulong)1), new Fr((ulong)32) };
+        Fr[] ys = { FrE.SetElement((ulong)1), FrE.SetElement((ulong)32) };
         Fr[][] fs =
         {
             polyEvalA.ToArray(), polyEvalB.ToArray()
@@ -80,10 +80,10 @@ public class MultiProofTests
             cA, cB
         };
 
-        Fr[] domain = new Fr[256];
+        Fr[] domain = new FrE[256];
         for (int i = 0; i < 256; i++)
         {
-            domain[i] = new Fr((ulong)i);
+            domain[i] = FrE.SetElement((ulong)i);
         }
 
         MultiProofProverQuery queryA = new MultiProofProverQuery(new LagrangeBasis(fs[0], domain), cs[0], zs[0], ys[0]);

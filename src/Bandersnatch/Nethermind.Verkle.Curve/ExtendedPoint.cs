@@ -66,30 +66,30 @@ public class ExtendedPoint
         Fp? t2 = q.T;
         Fp? z2 = q.Z;
 
-        Fp? a = x1 * x2;
-        Fp? b = y1 * y2;
+        Fp? a = z1 * z2;
+        Fp? b = a * a;
 
-        Fp? c = D * t1 * t2;
+        Fp? c = x1 * x2;
+        Fp? d = y1 * y2;
 
-        Fp? d = z1 * z2;
+        Fp? e = D * t1 * t2;
 
-        Fp? h = b - (a * A);
+        Fp? f = b - e;
+        Fp? g = b + e;
 
-        Fp? e = (x1 + y1) * (x2 + y2) - a - b;
+        FpE? x3 = a.Value * f.Value * ((x1 + y1) * (x2 + y2) - c - d);
+        FpE y3 = a.Value * g.Value * (d.Value - A * c.Value);
+        FpE z3 = f.Value * g.Value;
 
-        Fp? f = d - c;
-
-        Fp? g = d + c;
-
-        return new ExtendedPoint(e.Value * f.Value, g.Value * h.Value, e.Value * h.Value, f.Value * g.Value);
+        return new ExtendedPoint(x3.Value, y3, x3.Value * y3, z3);
     }
     public static ExtendedPoint Sub(ExtendedPoint p, ExtendedPoint q) => Add(p, Neg(q));
     public static ExtendedPoint Double(ExtendedPoint p) => Add(p, p);
 
     public static ExtendedPoint ScalarMultiplication(ExtendedPoint point, Fr scalar)
     {
-        ExtendedPoint? result = Identity();
-        ExtendedPoint? temp = point.Dup();
+        ExtendedPoint result = Identity();
+        ExtendedPoint temp = point.Dup();
 
         byte[] bytes = scalar.ToBytes().ToArray();
         // TODO: use BitLen to simplify this

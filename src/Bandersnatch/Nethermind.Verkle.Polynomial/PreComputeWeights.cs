@@ -33,7 +33,7 @@ public class PreComputeWeights
 
         for (int i = 0; i < domain.Length; i++)
         {
-            Fr aPrimeX = res.APrime.Evaluate(new Fr(i));
+            Fr aPrimeX = res.APrime.Evaluate(FrE.SetElement(i));
             Fr.Inverse(aPrimeX, out FrE aPrimeXInv);
             aPrimeDom[i] = aPrimeX;
             aPrimeDomInv[i] = aPrimeXInv;
@@ -47,13 +47,13 @@ public class PreComputeWeights
         int index = 0;
         for (int i = 0; i < domainSize; i++)
         {
-            Fr.Inverse(new Fr(i), out res.DomainInv[index]);
+            Fr.Inverse(FrE.SetElement(i), out res.DomainInv[index]);
             index++;
         }
 
         for (int i = 1 - domainSize; i < 0; i++)
         {
-            Fr.Inverse(new Fr(i), out res.DomainInv[index]);
+            Fr.Inverse(FrE.SetElement(i), out res.DomainInv[index]);
             index++;
         }
 

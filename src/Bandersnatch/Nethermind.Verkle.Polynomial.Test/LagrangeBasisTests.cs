@@ -14,32 +14,32 @@ public class LagrangeBasisTests
     {
         Fr[] domain = new[]
         {
-            new Fr((ulong)0),
-            new Fr((ulong)1),
-            new Fr((ulong)2),
-            new Fr((ulong)3),
-            new Fr((ulong)4),
-            new Fr((ulong)5)
+            FrE.SetElement((ulong)0),
+            FrE.SetElement((ulong)1),
+            FrE.SetElement((ulong)2),
+            FrE.SetElement((ulong)3),
+            FrE.SetElement((ulong)4),
+            FrE.SetElement((ulong)5)
         };
 
         Fr[] domainSq = new[]
         {
-            new Fr((ulong)0),
-            new Fr((ulong)1),
-            new Fr((ulong)4),
-            new Fr((ulong)9),
-            new Fr((ulong)16),
-            new Fr((ulong)25)
+            FrE.SetElement((ulong)0),
+            FrE.SetElement((ulong)1),
+            FrE.SetElement((ulong)4),
+            FrE.SetElement((ulong)9),
+            FrE.SetElement((ulong)16),
+            FrE.SetElement((ulong)25)
         };
 
         Fr[] domain_2 = new[]
         {
-            new Fr((ulong)2),
-            new Fr((ulong)3),
-            new Fr((ulong)4),
-            new Fr((ulong)5),
-            new Fr((ulong)6),
-            new Fr((ulong)7)
+            FrE.SetElement((ulong)2),
+            FrE.SetElement((ulong)3),
+            FrE.SetElement((ulong)4),
+            FrE.SetElement((ulong)5),
+            FrE.SetElement((ulong)6),
+            FrE.SetElement((ulong)7)
         };
 
         LagrangeBasis a = new LagrangeBasis(domainSq, domain);
@@ -47,12 +47,12 @@ public class LagrangeBasisTests
 
         Fr[] expected = new[]
         {
-            new Fr((ulong)2),
-            new Fr((ulong)4),
-            new Fr((ulong)8),
-            new Fr((ulong)14),
-            new Fr((ulong)22),
-            new Fr((ulong)32)
+            FrE.SetElement((ulong)2),
+            FrE.SetElement((ulong)4),
+            FrE.SetElement((ulong)8),
+            FrE.SetElement((ulong)14),
+            FrE.SetElement((ulong)22),
+            FrE.SetElement((ulong)32)
         };
         LagrangeBasis ex = new LagrangeBasis(expected, domain);
         LagrangeBasis result = a + b;
@@ -73,31 +73,31 @@ public class LagrangeBasisTests
     {
         Fr[] domain = new[]
         {
-            new Fr((ulong)0),
-            new Fr((ulong)1),
-            new Fr((ulong)2),
-            new Fr((ulong)3),
-            new Fr((ulong)4),
-            new Fr((ulong)5)
+            FrE.SetElement((ulong)0),
+            FrE.SetElement((ulong)1),
+            FrE.SetElement((ulong)2),
+            FrE.SetElement((ulong)3),
+            FrE.SetElement((ulong)4),
+            FrE.SetElement((ulong)5)
         };
 
         Fr[] domainSq = new[]
         {
-            new Fr((ulong)0),
-            new Fr((ulong)1),
-            new Fr((ulong)4),
-            new Fr((ulong)9),
-            new Fr((ulong)16),
-            new Fr((ulong)25)
+            FrE.SetElement((ulong)0),
+            FrE.SetElement((ulong)1),
+            FrE.SetElement((ulong)4),
+            FrE.SetElement((ulong)9),
+            FrE.SetElement((ulong)16),
+            FrE.SetElement((ulong)25)
         };
         Fr[] domainPow4 = new[]
         {
-            new Fr((ulong)0),
-            new Fr((ulong)1),
-            new Fr((ulong)16),
-            new Fr((ulong)81),
-            new Fr((ulong)256),
-            new Fr((ulong)625)
+            FrE.SetElement((ulong)0),
+            FrE.SetElement((ulong)1),
+            FrE.SetElement((ulong)16),
+            FrE.SetElement((ulong)81),
+            FrE.SetElement((ulong)256),
+            FrE.SetElement((ulong)625)
         };
 
 
@@ -117,37 +117,37 @@ public class LagrangeBasisTests
     {
         Fr[] domain = new[]
         {
-            new Fr((ulong)0),
-            new Fr((ulong)1),
-            new Fr((ulong)2),
-            new Fr((ulong)3),
-            new Fr((ulong)4),
-            new Fr((ulong)5)
+            FrE.SetElement((ulong)0),
+            FrE.SetElement((ulong)1),
+            FrE.SetElement((ulong)2),
+            FrE.SetElement((ulong)3),
+            FrE.SetElement((ulong)4),
+            FrE.SetElement((ulong)5)
         };
 
         Fr[] domainSq = new[]
         {
-            new Fr((ulong)0),
-            new Fr((ulong)1),
-            new Fr((ulong)4),
-            new Fr((ulong)9),
-            new Fr((ulong)16),
-            new Fr((ulong)25)
+            FrE.SetElement((ulong)0),
+            FrE.SetElement((ulong)1),
+            FrE.SetElement((ulong)4),
+            FrE.SetElement((ulong)9),
+            FrE.SetElement((ulong)16),
+            FrE.SetElement((ulong)25)
         };
 
-        Fr constant = new Fr((ulong)10);
+        Fr constant = FrE.SetElement((ulong)10);
 
         LagrangeBasis a = new LagrangeBasis(domainSq, domain);
         LagrangeBasis result = a * constant;
 
         Fr[] expected = new[]
         {
-            new Fr((ulong)0),
-            new Fr((ulong)10),
-            new Fr((ulong)40),
-            new Fr((ulong)90),
-            new Fr((ulong)160),
-            new Fr((ulong)250)
+            FrE.SetElement((ulong)0),
+            FrE.SetElement((ulong)10),
+            FrE.SetElement((ulong)40),
+            FrE.SetElement((ulong)90),
+            FrE.SetElement((ulong)160),
+            FrE.SetElement((ulong)250)
         };
         LagrangeBasis ex = new LagrangeBasis(expected, domain);
 
@@ -162,22 +162,22 @@ public class LagrangeBasisTests
     {
         Fr[] domain = new[]
         {
-            new Fr((ulong)0),
-            new Fr((ulong)1),
-            new Fr((ulong)2),
-            new Fr((ulong)3),
-            new Fr((ulong)4),
-            new Fr((ulong)5)
+            FrE.SetElement((ulong)0),
+            FrE.SetElement((ulong)1),
+            FrE.SetElement((ulong)2),
+            FrE.SetElement((ulong)3),
+            FrE.SetElement((ulong)4),
+            FrE.SetElement((ulong)5)
         };
 
         Fr[] domainSq = new[]
         {
-            new Fr((ulong)0),
-            new Fr((ulong)1),
-            new Fr((ulong)4),
-            new Fr((ulong)9),
-            new Fr((ulong)16),
-            new Fr((ulong)25)
+            FrE.SetElement((ulong)0),
+            FrE.SetElement((ulong)1),
+            FrE.SetElement((ulong)4),
+            FrE.SetElement((ulong)9),
+            FrE.SetElement((ulong)16),
+            FrE.SetElement((ulong)25)
         };
 
         LagrangeBasis xSquaredLagrange = new LagrangeBasis(domainSq, domain);

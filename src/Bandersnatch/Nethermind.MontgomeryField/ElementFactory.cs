@@ -4,10 +4,9 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using Nethermind.Field;
 using Nethermind.Int256;
 
-namespace Nethermind.MontgomeryField;
+namespace Nethermind.Field.Montgomery;
 
 [StructLayout(LayoutKind.Explicit)]
 public readonly struct Element
@@ -15,42 +14,42 @@ public readonly struct Element
     const int Limbs = 4;
     const int Bits = 253;
     const int Bytes = Limbs * 8;
-    private const ulong sqrtR = 5;
-    const ulong qInvNeg = 17410672245482742751;
+    private const ulong SqrtR = 5;
+    const ulong QInvNeg = 17410672245482742751;
 
     public static readonly Element Zero = new Element(0, 0, 0, 0);
 
-    private const ulong one0 = 6347764673676886264;
-    private const ulong one1 = 253265890806062196;
-    private const ulong one2 = 11064306276430008312;
-    private const ulong one3 = 1739710354780652911;
-    public static readonly Element One = new Element(one0, one1, one2, one3);
+    private const ulong One0 = 6347764673676886264;
+    private const ulong One1 = 253265890806062196;
+    private const ulong One2 = 11064306276430008312;
+    private const ulong One3 = 1739710354780652911;
+    public static readonly Element One = new Element(One0, One1, One2, One3);
 
-    private const  ulong q0 = 8429901452645165025;
-    private const  ulong q1 = 18415085837358793841;
-    private const  ulong q2 = 922804724659942912;
-    private const  ulong q3 = 2088379214866112338;
-    private static readonly Element qElement = new Element(q0, q1, q2, q3);
+    private const  ulong Q0 = 8429901452645165025;
+    private const  ulong Q1 = 18415085837358793841;
+    private const  ulong Q2 = 922804724659942912;
+    private const  ulong Q3 = 2088379214866112338;
+    private static readonly Element qElement = new Element(Q0, Q1, Q2, Q3);
 
-    private  const ulong r0 = 15831548891076708299;
-    private  const ulong r1 = 4682191799977818424;
-    private  const ulong r2 = 12294384630081346794;
-    private  const ulong r3 = 785759240370973821;
-    private static readonly Element rSquare = new Element(r0, r1, r2, r3);
+    private  const ulong R0 = 15831548891076708299;
+    private  const ulong R1 = 4682191799977818424;
+    private  const ulong R2 = 12294384630081346794;
+    private  const ulong R3 = 785759240370973821;
+    private static readonly Element rSquare = new Element(R0, R1, R2, R3);
 
-    private const ulong g0 = 5415081136944170355;
-    private const ulong g1 = 16923187137941795325;
-    private const ulong g2 = 11911047149493888393;
-    private const ulong g3 = 436996551065533341;
-    private static readonly Element gResidue = new Element(g0, g1, g2, g3);
+    private const ulong G0 = 5415081136944170355;
+    private const ulong G1 = 16923187137941795325;
+    private const ulong G2 = 11911047149493888393;
+    private const ulong G3 = 436996551065533341;
+    private static readonly Element gResidue = new Element(G0, G1, G2, G3);
 
-    private const ulong qM0 = 5415081136944170355;
-    private const ulong qM1 = 16923187137941795325;
-    private const ulong qM2 = 11911047149493888393;
-    private const ulong qM3 = 436996551065533341;
-    private static readonly Element qMinOne = new Element(qM0, qM1, qM2, qM3);
+    private const ulong QM0 = 5415081136944170355;
+    private const ulong QM1 = 16923187137941795325;
+    private const ulong QM2 = 11911047149493888393;
+    private const ulong QM3 = 436996551065533341;
+    private static readonly Element qMinOne = new Element(QM0, QM1, QM2, QM3);
 
-    private static Lazy<UInt256> _modulus = new Lazy<UInt256>(() =>
+    public static Lazy<UInt256> _modulus = new Lazy<UInt256>(() =>
     {
         UInt256.TryParse("13108968793781547619861935127046491459309155893440570251786403306729687672801", out UInt256 output);
         return output;
@@ -131,7 +130,7 @@ public readonly struct Element
         UInt256 res;
         if (value.Sign < 0)
         {
-            UInt256Extension.SubtractMod(UInt256.Zero,(UInt256)(-value), _modulus.Value, out res);
+            ElementUtils.SubtractMod(UInt256.Zero,(UInt256)(-value), _modulus.Value, out res);
         }
         else
         {
@@ -141,6 +140,14 @@ public readonly struct Element
         u1 = res.u1;
         u2 = res.u2;
         u3 = res.u3;
+    }
+
+    public static IEnumerable<Element> SetRandom()
+    {
+        byte[] data = new byte[32];
+        Random rand = new(0);
+        rand.NextBytes(data);
+        yield return new Element(data);
     }
 
     public Element Neg()
@@ -195,7 +202,7 @@ public readonly struct Element
         MulMod(x, w, out var y);
         MulMod(w, y, out var b);
 
-        ulong r = sqrtR;
+        ulong r = SqrtR;
         Element t = b;
 
         for (ulong i = 0; i < r - 1; i++)
@@ -321,43 +328,43 @@ public readonly struct Element
         z[1] = x[1];
         z[2] = x[2];
         z[3] = x[3];
-        ulong m, C;
+        ulong m, c;
 
-        m = z[0] * qInvNeg;
-        C = MAdd0(m, q0, z[0]);
-        (C, z[0]) = MAdd2(m, q1, z[1], C);
-        (C, z[1]) = MAdd2(m, q2, z[2], C);
-        (C, z[2]) = MAdd2(m, q3, z[3], C);
-        z[3] = C;
+        m = z[0] * QInvNeg;
+        c = MAdd0(m, Q0, z[0]);
+        (c, z[0]) = MAdd2(m, Q1, z[1], c);
+        (c, z[1]) = MAdd2(m, Q2, z[2], c);
+        (c, z[2]) = MAdd2(m, Q3, z[3], c);
+        z[3] = c;
 
-        m = z[0] * qInvNeg;
-        C = MAdd0(m, q0, z[0]);
-        (C, z[0]) = MAdd2(m, q1, z[1], C);
-        (C, z[1]) = MAdd2(m, q2, z[2], C);
-        (C, z[2]) = MAdd2(m, q3, z[3], C);
-        z[3] = C;
+        m = z[0] * QInvNeg;
+        c = MAdd0(m, Q0, z[0]);
+        (c, z[0]) = MAdd2(m, Q1, z[1], c);
+        (c, z[1]) = MAdd2(m, Q2, z[2], c);
+        (c, z[2]) = MAdd2(m, Q3, z[3], c);
+        z[3] = c;
 
-        m = z[0] * qInvNeg;
-        C = MAdd0(m, q0, z[0]);
-        (C, z[0]) = MAdd2(m, q1, z[1], C);
-        (C, z[1]) = MAdd2(m, q2, z[2], C);
-        (C, z[2]) = MAdd2(m, q3, z[3], C);
-        z[3] = C;
+        m = z[0] * QInvNeg;
+        c = MAdd0(m, Q0, z[0]);
+        (c, z[0]) = MAdd2(m, Q1, z[1], c);
+        (c, z[1]) = MAdd2(m, Q2, z[2], c);
+        (c, z[2]) = MAdd2(m, Q3, z[3], c);
+        z[3] = c;
 
-        m = z[0] * qInvNeg;
-        C = MAdd0(m, q0, z[0]);
-        (C, z[0]) = MAdd2(m, q1, z[1], C);
-        (C, z[1]) = MAdd2(m, q2, z[2], C);
-        (C, z[2]) = MAdd2(m, q3, z[3], C);
-        z[3] = C;
+        m = z[0] * QInvNeg;
+        c = MAdd0(m, Q0, z[0]);
+        (c, z[0]) = MAdd2(m, Q1, z[1], c);
+        (c, z[1]) = MAdd2(m, Q2, z[2], c);
+        (c, z[2]) = MAdd2(m, Q3, z[3], c);
+        z[3] = c;
 
         if (LessThan(qElement, z))
         {
             ulong b = 0;
-            SubtractWithBorrow(z[0], q0, ref b, out z[0]);
-            SubtractWithBorrow(z[1], q1, ref b, out z[1]);
-            SubtractWithBorrow(z[2], q2, ref b, out z[2]);
-            SubtractWithBorrow(z[3], q3, ref b, out z[3]);
+            SubtractWithBorrow(z[0], Q0, ref b, out z[0]);
+            SubtractWithBorrow(z[1], Q1, ref b, out z[1]);
+            SubtractWithBorrow(z[2], Q2, ref b, out z[2]);
+            SubtractWithBorrow(z[3], Q3, ref b, out z[3]);
         }
         res = z;
     }
@@ -384,26 +391,26 @@ public readonly struct Element
             while ((v[0] & 1) == 0)
             {
                 v >>= 1;
-                if ((s[0] & 1) == 1) s += qElement;
+                if ((s[0] & 1) == 1) Add(in s, in qElement, out s);
                 s >>= 1;
             }
 
             while ((u[0] & 1) == 0)
             {
                 u >>= 1;
-                if ((r[0] & 1) == 1) r += qElement;
+                if ((r[0] & 1) == 1) Add(in r, in qElement, out s);
                 r >>= 1;
             }
 
             if (!LessThan(v, u))
             {
-                v -= u;
-                if (SubtractUnderflow(s, r, out s)) s += qElement;
+                SubtractUnderflow(in v, in u, out v);
+                if (SubtractUnderflow(s, r, out s)) Add(in s, in qElement, out s);
             }
             else
             {
-                u -= v;
-                if (SubtractUnderflow(r, s, out r)) r += qElement;
+                SubtractUnderflow(in u, in v, out u);
+                if (SubtractUnderflow(r, s, out r)) Add(in r, in qElement, out s);
             }
 
 
@@ -432,63 +439,63 @@ public readonly struct Element
 
             ulong v = x[0];
             (c[1], c[0]) = Multiply64(v, y[0]);
-            ulong m = c[0] * qInvNeg;
-            c[2] = MAdd0(m, q0, c[0]);
+            ulong m = c[0] * QInvNeg;
+            c[2] = MAdd0(m, Q0, c[0]);
             (c[1], c[0]) = MAdd1(v, y[1], c[1]);
-            (c[2], t[0]) = MAdd2(m, q1, c[2], c[0]);
+            (c[2], t[0]) = MAdd2(m, Q1, c[2], c[0]);
             (c[1], c[0]) = MAdd1(v, y[2], c[1]);
-            (c[2], t[1]) = MAdd2(m, q2, c[2], c[0]);
+            (c[2], t[1]) = MAdd2(m, Q2, c[2], c[0]);
             (c[1], c[0]) = MAdd1(v, y[3], c[1]);
-            (t[3], t[2]) = MAdd3(m, q3, c[0], c[2], c[1]);
+            (t[3], t[2]) = MAdd3(m, Q3, c[0], c[2], c[1]);
         }
         {
             // round 1
             ulong v = x[1];
             (c[1], c[0]) = MAdd1(v, y[0], t[0]);
-            ulong m = (c[0] * qInvNeg);
-            c[2] = MAdd0(m, q0, c[0]);
+            ulong m = (c[0] * QInvNeg);
+            c[2] = MAdd0(m, Q0, c[0]);
             (c[1], c[0]) = MAdd2(v, y[1], c[1], t[1]);
-            (c[2], t[0]) = MAdd2(m, q1, c[2], c[0]);
+            (c[2], t[0]) = MAdd2(m, Q1, c[2], c[0]);
             (c[1], c[0]) = MAdd2(v, y[2], c[1], t[2]);
-            (c[2], t[1]) = MAdd2(m, q2, c[2], c[0]);
+            (c[2], t[1]) = MAdd2(m, Q2, c[2], c[0]);
             (c[1], c[0]) = MAdd2(v, y[3], c[1], t[3]);
-            (t[3], t[2]) = MAdd3(m, q3, c[0], c[2], c[1]);
+            (t[3], t[2]) = MAdd3(m, Q3, c[0], c[2], c[1]);
         }
         {
             // round 2
 
             ulong v = x[2];
             (c[1], c[0]) = MAdd1(v, y[0], t[0]);
-            ulong m = (c[0] * qInvNeg);
-            c[2] = MAdd0(m, q0, c[0]);
+            ulong m = (c[0] * QInvNeg);
+            c[2] = MAdd0(m, Q0, c[0]);
             (c[1], c[0]) = MAdd2(v, y[1], c[1], t[1]);
-            (c[2], t[0]) = MAdd2(m, q1, c[2], c[0]);
+            (c[2], t[0]) = MAdd2(m, Q1, c[2], c[0]);
             (c[1], c[0]) = MAdd2(v, y[2], c[1], t[2]);
-            (c[2], t[1]) = MAdd2(m, q2, c[2], c[0]);
+            (c[2], t[1]) = MAdd2(m, Q2, c[2], c[0]);
             (c[1], c[0]) = MAdd2(v, y[3], c[1], t[3]);
-            (t[3], t[2]) = MAdd3(m, q3, c[0], c[2], c[1]);
+            (t[3], t[2]) = MAdd3(m, Q3, c[0], c[2], c[1]);
         }
         {
             // round 3
 
             ulong v = x[3];
             (c[1], c[0]) = MAdd1(v, y[0], t[0]);
-            ulong m = (c[0] * qInvNeg);
-            c[2] = MAdd0(m, q0, c[0]);
+            ulong m = (c[0] * QInvNeg);
+            c[2] = MAdd0(m, Q0, c[0]);
             (c[1], c[0]) = MAdd2(v, y[1], c[1], t[1]);
-            (c[2], z[0]) = MAdd2(m, q1, c[2], c[0]);
+            (c[2], z[0]) = MAdd2(m, Q1, c[2], c[0]);
             (c[1], c[0]) = MAdd2(v, y[2], c[1], t[2]);
-            (c[2], z[1]) = MAdd2(m, q2, c[2], c[0]);
+            (c[2], z[1]) = MAdd2(m, Q2, c[2], c[0]);
             (c[1], c[0]) = MAdd2(v, y[3], c[1], t[3]);
-            (z[3], z[2]) = MAdd3(m, q3, c[0], c[2], c[1]);
+            (z[3], z[2]) = MAdd3(m, Q3, c[0], c[2], c[1]);
         }
         if (LessThan(qElement, z))
         {
             ulong b = 0;
-            SubtractWithBorrow(z[0], q0, ref b, out z[0]);
-            SubtractWithBorrow(z[1], q1, ref b, out z[1]);
-            SubtractWithBorrow(z[2], q2, ref b, out z[2]);
-            SubtractWithBorrow(z[3], q3, ref b, out z[3]);
+            SubtractWithBorrow(z[0], Q0, ref b, out z[0]);
+            SubtractWithBorrow(z[1], Q1, ref b, out z[1]);
+            SubtractWithBorrow(z[2], Q2, ref b, out z[2]);
+            SubtractWithBorrow(z[3], Q3, ref b, out z[3]);
         }
         res = z;
     }
@@ -900,7 +907,7 @@ sh192:
 
     public static Element operator +(in Element a, in Element b)
     {
-        Add(in a, in b, out Element res);
+        AddMod(in a, in b, out Element res);
         return res;
     }
 
@@ -1000,6 +1007,11 @@ sh192:
         if (a.u1 != b.u1)
             return a.u1 < b.u1;
         return a.u0 < b.u0;
+    }
+
+    public static bool LessThanSubModulus(Element x)
+    {
+        return LessThan(x, qElement);
     }
 
     public static bool operator ==(in Element a, int b) => a.Equals(b);

@@ -900,7 +900,7 @@ sh192:
 
     public static FpE operator +(in FpE a, in FpE b)
     {
-        Add(in a, in b, out FpE res);
+        AddMod(in a, in b, out FpE res);
         return res;
     }
 

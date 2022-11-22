@@ -16,7 +16,7 @@ public static class IPA
 
     public static Fr InnerProduct(IEnumerable<FrE> a, IEnumerable<FrE> b)
     {
-        Fr result = new Fr(0);
+        Fr result = FrE.SetElement(0);
 
         foreach ((Fr aI, Fr bI) in a.Zip(b))
         {

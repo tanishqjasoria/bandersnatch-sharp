@@ -39,7 +39,7 @@ public static class VerkleUtils
         get
         {
             new UInt256(2).Exp(128, out UInt256 res);
-            return new Fr(res.u0, res.u1, res.u2, res.u3);
+            return FrE.SetElement(res.u0, res.u1, res.u2, res.u3);
         }
     }
     public static byte[] ToAddress32(byte[] address20)

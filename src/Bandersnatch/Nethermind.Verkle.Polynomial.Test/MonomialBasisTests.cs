@@ -14,12 +14,12 @@ public class MonomialBasisTests
     {
         Fr[] xs = new[]
         {
-            new Fr((ulong)0),
-            new Fr((ulong)1),
-            new Fr((ulong)2),
-            new Fr((ulong)3),
-            new Fr((ulong)4),
-            new Fr((ulong)5)
+            FrE.SetElement((ulong)0),
+            FrE.SetElement((ulong)1),
+            FrE.SetElement((ulong)2),
+            FrE.SetElement((ulong)3),
+            FrE.SetElement((ulong)4),
+            FrE.SetElement((ulong)5)
         };
 
         MonomialBasis z = MonomialBasis.VanishingPoly(xs);
@@ -35,21 +35,21 @@ public class MonomialBasisTests
     {
         Fr[] aL = new[]
         {
-            new Fr((ulong)2),
-            new Fr((ulong)3),
-            new Fr((ulong)1),
+            FrE.SetElement((ulong)2),
+            FrE.SetElement((ulong)3),
+            FrE.SetElement((ulong)1),
         };
         MonomialBasis a = new MonomialBasis(aL);
         Fr[] bL = new[]
         {
-            new Fr((ulong)1),
-            new Fr((ulong)1),
+            FrE.SetElement((ulong)1),
+            FrE.SetElement((ulong)1),
         };
         MonomialBasis b = new MonomialBasis(bL);
 
         MonomialBasis result = a / b;
-        Assert.IsTrue(result._coeffs[0].Equals(new Fr((ulong)2)));
-        Assert.IsTrue(result._coeffs[1].Equals(new Fr((ulong)1)));
+        Assert.IsTrue(result._coeffs[0].Equals(FrE.SetElement((ulong)2)));
+        Assert.IsTrue(result._coeffs[1].Equals(FrE.SetElement((ulong)1)));
     }
 
     [Test]
@@ -57,19 +57,19 @@ public class MonomialBasisTests
     {
         Fr[] aL = new[]
         {
-            new Fr((ulong)9),
-            new Fr((ulong)20),
-            new Fr((ulong)10),
-            new Fr((ulong)5),
-            new Fr((ulong)6),
+            FrE.SetElement((ulong)9),
+            FrE.SetElement((ulong)20),
+            FrE.SetElement((ulong)10),
+            FrE.SetElement((ulong)5),
+            FrE.SetElement((ulong)6),
         };
         MonomialBasis a = new MonomialBasis(aL);
         Fr[] bL = new[]
         {
-            new Fr((ulong)20),
-            new Fr((ulong)20),
-            new Fr((ulong)15),
-            new Fr((ulong)24),
+            FrE.SetElement((ulong)20),
+            FrE.SetElement((ulong)20),
+            FrE.SetElement((ulong)15),
+            FrE.SetElement((ulong)24),
         };
         MonomialBasis b = new MonomialBasis(bL);
 

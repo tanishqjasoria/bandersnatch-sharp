@@ -36,7 +36,7 @@ public class CRS
             FpE x = new FpE(hash, true);
             increment++;
 
-            byte[] xAsBytes = x.ToBytes().ToArray();
+            byte[] xAsBytes = x.ToBytesBigEndian().ToArray();
             (FpE X, FpE Y)? pointFound = Banderwagon.FromBytes(xAsBytes);
             if(pointFound is null) continue;
             points[generatedPoints] = new Banderwagon(null, new ExtendedPoint(pointFound.Value.X, pointFound.Value.Y));

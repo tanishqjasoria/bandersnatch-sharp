@@ -142,13 +142,13 @@ public class AffinePoint
         if (y is null)
             return null;
 
-        Fp.Sqrt(y.Value, out y);
-        if (y is null)
+
+        if(!Fp.Sqrt(y.Value, out FpE z))
             return null;
 
-        bool isLargest = y.Value.LexicographicallyLargest();
+        bool isLargest = z.LexicographicallyLargest();
 
-        return isLargest == returnPositiveY ? y : y.Value.Neg();
+        return isLargest == returnPositiveY ? z : z.Neg();
     }
 
     public static AffinePoint operator +(in AffinePoint a, in AffinePoint b)

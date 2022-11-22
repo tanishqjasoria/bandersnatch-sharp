@@ -28,7 +28,7 @@ public readonly struct CurveParams
         0, 0, 0, 0
     };
 
-    public static readonly Fp A = new(-5);
+    public static readonly Fp A = FpE.SetElement(-5);
 
     public static readonly Fp YTe = new(NumY);
     public static readonly Fp XTe = new(NumX);
@@ -43,3 +43,37 @@ public readonly struct CurveParams
 
     public static readonly Fp D = DNum * DDen.Value;
 }
+
+
+// public readonly struct CurveParams
+// {
+//     private static readonly byte[] NumY =
+//     {
+//         102, 65, 151, 204, 182, 103, 49, 94, 96, 100, 228, 238, 129, 173, 140, 53, 134, 213, 220, 186, 80, 139, 125,
+//         21, 15, 62, 18, 218, 158, 102, 108, 42
+//     };
+//     private static readonly byte[] NumX =
+//     {
+//         24, 174, 82, 162, 102, 24, 231, 225, 101, 132, 153, 173, 34, 192, 121, 43, 243, 66, 190, 123, 119, 17, 55,
+//         116, 197, 52, 11, 44, 204, 50, 193, 41
+//     };
+//
+//     public static readonly Lazy<Fp> a = new Lazy<Fp>(() =>
+//     {
+//         return FpE.SetElement(5).Neg();
+//     });
+//     public static Fp A => a.Value;
+//
+//     public static readonly Fp YTe = new(NumY);
+//     public static readonly Fp XTe = new(NumX);
+//
+//     public static readonly Lazy<Fp> d = new Lazy<Fp>(() =>
+//     {
+//         UInt256.TryParse("45022363124591815672509500913686876175488063829319466900776701791074614335719", out var x);
+//         return FpE.SetElement(x.u0, x.u1, x.u2, x.u3);
+//     });
+//
+//     public static Fp D = d.Value;
+//
+//     public static readonly Fp Cofactor = FpE.SetElement(4);
+// }

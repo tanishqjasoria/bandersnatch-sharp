@@ -80,7 +80,7 @@ public class MonomialBasis : IEqualityComparer<MonomialBasis>
         Fr[] derivative = new Fr[f.Length() - 1];
         for (int i = 1; i < f.Length(); i++)
         {
-            Fr x = new Fr((ulong)i) * f._coeffs[i]!;
+            Fr x = Fr.SetElement((ulong)i) * f._coeffs[i]!;
             derivative[i - 1] = x;
         }
         return new MonomialBasis(derivative.ToArray());

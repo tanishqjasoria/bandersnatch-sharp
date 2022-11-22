@@ -61,7 +61,7 @@ public class TranscriptTests
     public void test_vector_2()
     {
         Transcript transcript = new Transcript("simple_protocol");
-        Fr scalar = new Fr((ulong)5);
+        Fr scalar = FrE.SetElement((ulong)5);
 
         transcript.AppendScalar(scalar, "five");
         transcript.AppendScalar(scalar, "five again");
@@ -75,8 +75,8 @@ public class TranscriptTests
     public void test_vector_3()
     {
         Transcript transcript = new Transcript("simple_protocol");
-        Fr minusOne = new Fr(-1);
-        Fr one = new Fr((ulong)1);
+        Fr minusOne = FrE.SetElement(-1);
+        Fr one = FrE.SetElement((ulong)1);
         transcript.AppendScalar(minusOne, "-1");
         transcript.DomainSep("separate me");
         transcript.AppendScalar(minusOne, "-1 again");

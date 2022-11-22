@@ -60,7 +60,7 @@ public class Banderwagon
         res = res.Neg();
         Fp.Add(res, Fp.One, out res);
 
-        return res.Legendre();
+        return Fp.Legendre(in res);
     }
 
     public static bool Equals(Banderwagon x, Banderwagon y)

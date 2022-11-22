@@ -900,7 +900,7 @@ sh192:
 
     public static FrE operator +(in FrE a, in FrE b)
     {
-        Add(in a, in b, out FrE res);
+        AddMod(in a, in b, out FrE res);
         return res;
     }
 
