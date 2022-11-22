@@ -11,7 +11,6 @@
       <ProjectReference Include="..\Nethermind.Config\Nethermind.Config.csproj" />
       <ProjectReference Include="..\Nethermind.Db\Nethermind.Db.csproj" />
       <ProjectReference Include="..\Nethermind.Serialization.Rlp\Nethermind.Serialization.Rlp.csproj" />
-      <ProjectReference Include="..\Nethermind.Verkle.Utils\Nethermind.Verkle.Utils.csproj" />
     </ItemGroup>
 
     <ItemGroup>

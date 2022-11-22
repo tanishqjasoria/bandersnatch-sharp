@@ -391,26 +391,26 @@ public readonly struct FpE
             while ((v[0] & 1) == 0)
             {
                 v >>= 1;
-                if ((s[0] & 1) == 1) s += qElement;
+                if ((s[0] & 1) == 1) Add(in s, in qElement, out s);
                 s >>= 1;
             }
 
             while ((u[0] & 1) == 0)
             {
                 u >>= 1;
-                if ((r[0] & 1) == 1) r += qElement;
+                if ((r[0] & 1) == 1) Add(in r, in qElement, out r);
                 r >>= 1;
             }
 
             if (!LessThan(v, u))
             {
-                v -= u;
-                if (SubtractUnderflow(s, r, out s)) s += qElement;
+                SubtractUnderflow(in v, in u, out v);
+                if (SubtractUnderflow(s, r, out s)) Add(in s, in qElement, out s);
             }
             else
             {
-                u -= v;
-                if (SubtractUnderflow(r, s, out r)) r += qElement;
+                SubtractUnderflow(in u, in v, out u);
+                if (SubtractUnderflow(r, s, out r)) Add(in r, in qElement, out r);
             }
 
 

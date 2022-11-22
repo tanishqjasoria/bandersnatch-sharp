@@ -18,7 +18,6 @@
       <ProjectReference Include="..\Nethermind.Verkle.Curve\Nethermind.Verkle.Curve.csproj" />
       <ProjectReference Include="..\Nethermind.Field\Nethermind.Field.csproj" />
       <ProjectReference Include="..\Nethermind.Verkle.Polynomial\Nethermind.Verkle.Polynomial.csproj" />
-      <ProjectReference Include="..\Nethermind.Verkle.Proofs\Nethermind.Verkle.Proofs.csproj" />
     </ItemGroup>
 
 </Project>
