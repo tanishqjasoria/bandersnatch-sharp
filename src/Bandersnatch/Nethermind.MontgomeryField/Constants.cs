@@ -1,7 +1,6 @@
 // Copyright 2022 Demerzel Solutions Limited
 // Licensed under Apache-2.0. For full terms, see LICENSE in the project root.
 
-using System.Numerics;
 using Nethermind.Int256;
 
 namespace Nethermind.MontgomeryField;
@@ -11,7 +10,8 @@ public class FpConstants
     const int Limbs = 4;
     const int Bits = 255;
     const int Bytes = Limbs * 8;
-    const ulong qInvNeg = 17410672245482742751;
+    private const ulong sqrtR = 32;
+    const ulong qInvNeg = 18446744069414584319;
 
     public static readonly FpE Zero = new FpE(0, 0, 0, 0);
 
@@ -52,12 +52,12 @@ public class FpConstants
     });
     public static Lazy<UInt256> _bLegendreExponentElement = new Lazy<UInt256>(() =>
     {
-        UInt256.TryParse("39f6d3a994cebea4199cec0404d0ec02a9ded2017fff2dff7fffffff80000000", out UInt256 output);
+        UInt256 output = new UInt256(Convert.FromHexString("39f6d3a994cebea4199cec0404d0ec02a9ded2017fff2dff7fffffff80000000"), true);
         return output;
     });
     public static Lazy<UInt256> _bSqrtExponentElement = new Lazy<UInt256>(() =>
     {
-        UInt256.TryParse("39f6d3a994cebea4199cec0404d0ec02a9ded2017fff2dff7fffffff", out UInt256 output);
+        UInt256 output = new UInt256(Convert.FromHexString("39f6d3a994cebea4199cec0404d0ec02a9ded2017fff2dff7fffffff"), true);
         return output;
     });
 }
@@ -67,6 +67,7 @@ public class FrConstants
     const int Limbs = 4;
     const int Bits = 253;
     const int Bytes = Limbs * 8;
+    private const ulong sqrtR = 5;
     const ulong qInvNeg = 17410672245482742751;
 
     public static readonly FrE Zero = new FrE(0, 0, 0, 0);
@@ -108,12 +109,12 @@ public class FrConstants
     });
     public static Lazy<UInt256> _bLegendreExponentElement = new Lazy<UInt256>(() =>
     {
-        UInt256.TryParse("e7db4ea6533afa906673b0101343b007fc7c3803a0c8238ba7e835a943b73f0", out UInt256 output);
+        UInt256 output = new UInt256(Convert.FromHexString("e7db4ea6533afa906673b0101343b007fc7c3803a0c8238ba7e835a943b73f0"), true);
         return output;
     });
     public static Lazy<UInt256> _bSqrtExponentElement = new Lazy<UInt256>(() =>
     {
-        UInt256.TryParse("73eda753299d7d483339d80809a1d803fe3e1c01d06411c5d3f41ad4a1db9f", out UInt256 output);
+        UInt256 output = new UInt256(Convert.FromHexString("73eda753299d7d483339d80809a1d803fe3e1c01d06411c5d3f41ad4a1db9f"), true);
         return output;
     });
 }

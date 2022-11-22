@@ -1,10 +1,10 @@
 // Copyright 2022 Demerzel Solutions Limited
 // Licensed under Apache-2.0. For full terms, see LICENSE in the project root.
 
-using System.Buffers.Binary;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Nethermind.Field;
 using Nethermind.Int256;
 
 namespace Nethermind.MontgomeryField;
@@ -15,6 +15,7 @@ public readonly struct Element
     const int Limbs = 4;
     const int Bits = 253;
     const int Bytes = Limbs * 8;
+    private const ulong sqrtR = 5;
     const ulong qInvNeg = 17410672245482742751;
 
     public static readonly Element Zero = new Element(0, 0, 0, 0);
@@ -56,12 +57,12 @@ public readonly struct Element
     });
     public static Lazy<UInt256> _bLegendreExponentElement = new Lazy<UInt256>(() =>
     {
-        UInt256.TryParse("e7db4ea6533afa906673b0101343b007fc7c3803a0c8238ba7e835a943b73f0", out UInt256 output);
+        UInt256 output = new UInt256(Convert.FromHexString("e7db4ea6533afa906673b0101343b007fc7c3803a0c8238ba7e835a943b73f0"), true);
         return output;
     });
     public static Lazy<UInt256> _bSqrtExponentElement = new Lazy<UInt256>(() =>
     {
-        UInt256.TryParse("73eda753299d7d483339d80809a1d803fe3e1c01d06411c5d3f41ad4a1db9f", out UInt256 output);
+        UInt256 output = new UInt256(Convert.FromHexString("73eda753299d7d483339d80809a1d803fe3e1c01d06411c5d3f41ad4a1db9f"), true);
         return output;
     });
 
@@ -100,7 +101,10 @@ public readonly struct Element
 
     public Element(in ReadOnlySpan<byte> bytes, bool isBigEndian = false)
     {
-        ElementUtils.FromBytes(bytes, isBigEndian, out u0, out u1, out u2, out u3);
+        UInt256 val = new UInt256(bytes, isBigEndian);
+        val.Mod(_modulus.Value, out UInt256 res);
+        Element inp = new Element(res.u0, res.u1, res.u2, res.u3);
+        ToMont(inp, out this);
     }
 
     public Element Dup()
@@ -110,11 +114,19 @@ public readonly struct Element
 
     public Element(BigInteger value)
     {
+        UInt256 res;
         if (value.Sign < 0)
         {
-            SubMod(Element.Zero, (Element)(-value), out this);
+            UInt256Extension.SubtractMod(UInt256.Zero,(UInt256)(-value), _modulus.Value, out res);
         }
-        else throw new ArgumentException();
+        else
+        {
+            UInt256.Mod((UInt256)value, _modulus.Value, out res);
+        }
+        u0 = res.u0;
+        u1 = res.u1;
+        u2 = res.u2;
+        u3 = res.u3;
     }
 
     public Element Neg()
@@ -129,20 +141,34 @@ public readonly struct Element
         return !SubtractUnderflow(mont, qMinOne, out Element _);
     }
 
-    public Span<byte> ToBytes() => ElementUtils.ToLittleEndian(u0, u1, u2, u3);
-    public Span<byte> ToBytesBigEndian() => ElementUtils.ToBigEndian(u0, u1, u2, u3);
+    public Span<byte> ToBytes()
+    {
+        ToRegular(in this, out Element x);
+        return ElementUtils.ToLittleEndian(x.u0, x.u1, x.u2, x.u3);
+    }
+
+    public Span<byte> ToBytesBigEndian()
+    {
+        ToRegular(in this, out Element x);
+        return ElementUtils.ToBigEndian(x.u0, x.u1, x.u2, x.u3);
+    }
 
     public static Element? FromBytes(byte[] byteEncoded, bool isBigEndian=false)
     {
-        ElementUtils.FromBytes(byteEncoded, isBigEndian, out ulong u0, out ulong u1, out ulong u2, out ulong u3);
-        Element item = new Element(u0, u1, u2, u3);
-        return item > qElement ? null : item;
+        UInt256 val = new UInt256(byteEncoded, isBigEndian);
+        if (val > _modulus.Value) return null;
+        Element inp = new Element(val.u0, val.u1, val.u2, val.u3);
+        ToMont(inp, out Element resF);
+        return resF;
     }
 
     public static Element FromBytesReduced(byte[] byteEncoded, bool isBigEndian=false)
     {
-        ElementUtils.FromBytes(byteEncoded, isBigEndian, out ulong u0, out ulong u1, out ulong u2, out ulong u3);
-        return new Element(u0, u1, u2, u3);
+        UInt256 val = new UInt256(byteEncoded, isBigEndian);
+        val.Mod(_modulus.Value, out UInt256 res);
+        Element inp = new Element(res.u0, res.u1, res.u2, res.u3);
+        ToMont(inp, out Element resF);
+        return resF;
     }
 
     public bool IsZero => (u0 | u1 | u2 | u3) == 0;
@@ -155,7 +181,7 @@ public readonly struct Element
         MulMod(x, w, out var y);
         MulMod(w, y, out var b);
 
-        ulong r = 5;
+        ulong r = sqrtR;
         Element t = b;
 
         for (ulong i = 0; i < r - 1; i++)
@@ -175,14 +201,15 @@ public readonly struct Element
             return false;
         }
 
+        Element g = gResidue;
         while (true)
         {
             ulong m = 0;
             t = b;
 
-            if (!t.IsOne)
+            while (!t.IsOne)
             {
-                Sqrt(in t, out t);
+                MulMod(in t, in t, out t);
                 m++;
             }
 
@@ -192,7 +219,7 @@ public readonly struct Element
                 return true;
             }
             int ge = (int)(r - m - 1);
-            t = gResidue;
+            t = g;
 
             while (ge > 0)
             {
@@ -200,7 +227,7 @@ public readonly struct Element
                 ge--;
             }
 
-            MulMod(in t, in t, out Element g);
+            MulMod(in t, in t, out g);
             MulMod(in y, in t, out y);
             MulMod(in b, in g, out b);
             r = m;
@@ -865,11 +892,7 @@ sh192:
 
     public static Element operator -(in Element a, in Element b)
     {
-        if (SubtractUnderflow(in a, in b, out Element c))
-        {
-            throw new ArithmeticException($"Underflow in subtraction {a} - {b}");
-        }
-
+        SubMod(in a, in b, out Element c);
         return c;
     }
 

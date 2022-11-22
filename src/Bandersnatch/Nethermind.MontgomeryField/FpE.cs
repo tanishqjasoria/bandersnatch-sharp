@@ -1,10 +1,10 @@
 // Copyright 2022 Demerzel Solutions Limited
 // Licensed under Apache-2.0. For full terms, see LICENSE in the project root.
 
-using System.Buffers.Binary;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Nethermind.Field;
 using Nethermind.Int256;
 
 namespace Nethermind.MontgomeryField;
@@ -12,10 +12,11 @@ namespace Nethermind.MontgomeryField;
 [StructLayout(LayoutKind.Explicit)]
 public readonly struct FpE
 {
-    const int Limbs = 4;
+     const int Limbs = 4;
     const int Bits = 255;
     const int Bytes = Limbs * 8;
-    const ulong qInvNeg = 17410672245482742751;
+    private const ulong sqrtR = 32;
+    const ulong qInvNeg = 18446744069414584319;
 
     public static readonly FpE Zero = new FpE(0, 0, 0, 0);
 
@@ -56,12 +57,12 @@ public readonly struct FpE
     });
     public static Lazy<UInt256> _bLegendreExponentElement = new Lazy<UInt256>(() =>
     {
-        UInt256.TryParse("39f6d3a994cebea4199cec0404d0ec02a9ded2017fff2dff7fffffff80000000", out UInt256 output);
+        UInt256 output = new UInt256(Convert.FromHexString("39f6d3a994cebea4199cec0404d0ec02a9ded2017fff2dff7fffffff80000000"), true);
         return output;
     });
     public static Lazy<UInt256> _bSqrtExponentElement = new Lazy<UInt256>(() =>
     {
-        UInt256.TryParse("39f6d3a994cebea4199cec0404d0ec02a9ded2017fff2dff7fffffff", out UInt256 output);
+        UInt256 output = new UInt256(Convert.FromHexString("39f6d3a994cebea4199cec0404d0ec02a9ded2017fff2dff7fffffff"), true);
         return output;
     });
 
@@ -100,7 +101,10 @@ public readonly struct FpE
 
     public FpE(in ReadOnlySpan<byte> bytes, bool isBigEndian = false)
     {
-        ElementUtils.FromBytes(bytes, isBigEndian, out u0, out u1, out u2, out u3);
+        UInt256 val = new UInt256(bytes, isBigEndian);
+        val.Mod(_modulus.Value, out UInt256 res);
+        FpE inp = new FpE(res.u0, res.u1, res.u2, res.u3);
+        ToMont(inp, out this);
     }
 
     public FpE Dup()
@@ -110,11 +114,19 @@ public readonly struct FpE
 
     public FpE(BigInteger value)
     {
+        UInt256 res;
         if (value.Sign < 0)
         {
-            SubMod(FpE.Zero, (FpE)(-value), out this);
+            UInt256Extension.SubtractMod(UInt256.Zero,(UInt256)(-value), _modulus.Value, out res);
         }
-        else throw new ArgumentException();
+        else
+        {
+            UInt256.Mod((UInt256)value, _modulus.Value, out res);
+        }
+        u0 = res.u0;
+        u1 = res.u1;
+        u2 = res.u2;
+        u3 = res.u3;
     }
 
     public FpE Neg()
@@ -129,33 +141,47 @@ public readonly struct FpE
         return !SubtractUnderflow(mont, qMinOne, out FpE _);
     }
 
-    public Span<byte> ToBytes() => ElementUtils.ToLittleEndian(u0, u1, u2, u3);
-    public Span<byte> ToBytesBigEndian() => ElementUtils.ToBigEndian(u0, u1, u2, u3);
+    public Span<byte> ToBytes()
+    {
+        ToRegular(in this, out FpE x);
+        return ElementUtils.ToLittleEndian(x.u0, x.u1, x.u2, x.u3);
+    }
+
+    public Span<byte> ToBytesBigEndian()
+    {
+        ToRegular(in this, out FpE x);
+        return ElementUtils.ToBigEndian(x.u0, x.u1, x.u2, x.u3);
+    }
 
     public static FpE? FromBytes(byte[] byteEncoded, bool isBigEndian=false)
     {
-        ElementUtils.FromBytes(byteEncoded, isBigEndian, out ulong u0, out ulong u1, out ulong u2, out ulong u3);
-        FpE item = new FpE(u0, u1, u2, u3);
-        return item > qElement ? null : item;
+        UInt256 val = new UInt256(byteEncoded, isBigEndian);
+        if (val > _modulus.Value) return null;
+        FpE inp = new FpE(val.u0, val.u1, val.u2, val.u3);
+        ToMont(inp, out FpE resF);
+        return resF;
     }
 
     public static FpE FromBytesReduced(byte[] byteEncoded, bool isBigEndian=false)
     {
-        ElementUtils.FromBytes(byteEncoded, isBigEndian, out ulong u0, out ulong u1, out ulong u2, out ulong u3);
-        return new FpE(u0, u1, u2, u3);
+        UInt256 val = new UInt256(byteEncoded, isBigEndian);
+        val.Mod(_modulus.Value, out UInt256 res);
+        FpE inp = new FpE(res.u0, res.u1, res.u2, res.u3);
+        ToMont(inp, out FpE resF);
+        return resF;
     }
 
     public bool IsZero => (u0 | u1 | u2 | u3) == 0;
 
     public bool IsOne => Equals(One);
 
-    public static bool Sqrt(in FpE x, out FpE? z)
+    public static bool Sqrt(in FpE x, out FpE z)
     {
         Exp(in x, _bSqrtExponentElement.Value, out var w);
         MulMod(x, w, out var y);
         MulMod(w, y, out var b);
 
-        ulong r = 5;
+        ulong r = sqrtR;
         FpE t = b;
 
         for (ulong i = 0; i < r - 1; i++)
@@ -171,16 +197,17 @@ public readonly struct FpE
 
         if (!t.IsOne)
         {
-            z = null;
+            z = Zero;
             return false;
         }
 
+        FpE g = gResidue;
         while (true)
         {
             ulong m = 0;
             t = b;
 
-            if (!t.IsOne)
+            while (!t.IsOne)
             {
                 MulMod(in t, in t, out t);
                 m++;
@@ -192,7 +219,7 @@ public readonly struct FpE
                 return true;
             }
             int ge = (int)(r - m - 1);
-            t = gResidue;
+            t = g;
 
             while (ge > 0)
             {
@@ -200,7 +227,7 @@ public readonly struct FpE
                 ge--;
             }
 
-            MulMod(in t, in t, out FpE g);
+            MulMod(in t, in t, out g);
             MulMod(in y, in t, out y);
             MulMod(in b, in g, out b);
             r = m;
@@ -210,15 +237,6 @@ public readonly struct FpE
     public static int Legendre(in FpE z)
     {
         Exp(z, _bLegendreExponentElement.Value, out FpE res);
-        if (res.IsZero) return 0;
-
-        if (res.IsOne) return 1;
-        return -1;
-    }
-
-    public int Legendre()
-    {
-        Exp(this, _bLegendreExponentElement.Value, out FpE res);
         if (res.IsZero) return 0;
 
         if (res.IsOne) return 1;
@@ -874,11 +892,7 @@ sh192:
 
     public static FpE operator -(in FpE a, in FpE b)
     {
-        if (SubtractUnderflow(in a, in b, out FpE c))
-        {
-            throw new ArithmeticException($"Underflow in subtraction {a} - {b}");
-        }
-
+        SubMod(in a, in b, out FpE c);
         return c;
     }
 
@@ -998,6 +1012,7 @@ sh192:
     public bool Equals(long other) => other >= 0 && u0 == (ulong)other && u1 == 0 && u2 == 0 && u3 == 0;
 
     public bool Equals(ulong other) => u0 == other && u1 == 0 && u2 == 0 && u3 == 0;
+
 
     public static FpE operator *(in FpE a, in FpE b)
     {
