@@ -91,13 +91,26 @@ public readonly struct Element
         }
     }
 
-    public Element(ulong u0 = 0, ulong u1 = 0, ulong u2 = 0, ulong u3 = 0)
+    internal Element(ulong u0 = 0, ulong u1 = 0, ulong u2 = 0, ulong u3 = 0)
     {
         this.u0 = u0;
         this.u1 = u1;
         this.u2 = u2;
         this.u3 = u3;
-        ToMont(in this, out this);
+    }
+
+    public static Element SetElement(ulong u0 = 0, ulong u1 = 0, ulong u2 = 0, ulong u3 = 0)
+    {
+        Element newElem = new Element(u0, u1, u2, u3);
+        ToMont(in newElem, out Element res);
+        return res;
+    }
+
+    public static Element SetElement(BigInteger value)
+    {
+        Element newElem = new Element(value);
+        ToMont(in newElem, out Element res);
+        return res;
     }
 
     public Element(in ReadOnlySpan<byte> bytes, bool isBigEndian = false)
@@ -113,7 +126,7 @@ public readonly struct Element
         return new Element(u0, u1, u2, u3);
     }
 
-    public Element(BigInteger value)
+    internal Element(BigInteger value)
     {
         UInt256 res;
         if (value.Sign < 0)
@@ -128,7 +141,6 @@ public readonly struct Element
         u1 = res.u1;
         u2 = res.u2;
         u3 = res.u3;
-        ToMont(in this, out this);
     }
 
     public Element Neg()

@@ -91,13 +91,12 @@ public readonly struct FpE
         }
     }
 
-    public FpE(ulong u0 = 0, ulong u1 = 0, ulong u2 = 0, ulong u3 = 0)
+    internal FpE(ulong u0 = 0, ulong u1 = 0, ulong u2 = 0, ulong u3 = 0)
     {
         this.u0 = u0;
         this.u1 = u1;
         this.u2 = u2;
         this.u3 = u3;
-        ToMont(in this, out this);
     }
 
     public FpE(in ReadOnlySpan<byte> bytes, bool isBigEndian = false)
@@ -113,7 +112,7 @@ public readonly struct FpE
         return new FpE(u0, u1, u2, u3);
     }
 
-    public FpE(BigInteger value)
+    internal FpE(BigInteger value)
     {
         UInt256 res;
         if (value.Sign < 0)
@@ -128,7 +127,20 @@ public readonly struct FpE
         u1 = res.u1;
         u2 = res.u2;
         u3 = res.u3;
-        ToMont(in this, out this);
+    }
+
+    public static FpE SetElement(ulong u0 = 0, ulong u1 = 0, ulong u2 = 0, ulong u3 = 0)
+    {
+        FpE newElem = new FpE(u0, u1, u2, u3);
+        ToMont(in newElem, out FpE res);
+        return res;
+    }
+
+    public static FpE SetElement(BigInteger value)
+    {
+        FpE newElem = new FpE(value);
+        ToMont(in newElem, out FpE res);
+        return res;
     }
 
     public FpE Neg()

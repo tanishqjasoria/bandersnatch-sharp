@@ -91,13 +91,12 @@ public readonly struct FrE
         }
     }
 
-    public FrE(ulong u0 = 0, ulong u1 = 0, ulong u2 = 0, ulong u3 = 0)
+    internal FrE(ulong u0 = 0, ulong u1 = 0, ulong u2 = 0, ulong u3 = 0)
     {
         this.u0 = u0;
         this.u1 = u1;
         this.u2 = u2;
         this.u3 = u3;
-        ToMont(in this, out this);
     }
 
     public FrE(in ReadOnlySpan<byte> bytes, bool isBigEndian = false)
@@ -113,7 +112,7 @@ public readonly struct FrE
         return new FrE(u0, u1, u2, u3);
     }
 
-    public FrE(BigInteger value)
+    internal FrE(BigInteger value)
     {
         UInt256 res;
         if (value.Sign < 0)
@@ -128,7 +127,20 @@ public readonly struct FrE
         u1 = res.u1;
         u2 = res.u2;
         u3 = res.u3;
-        ToMont(in this, out this);
+    }
+
+    public static FrE SetElement(ulong u0 = 0, ulong u1 = 0, ulong u2 = 0, ulong u3 = 0)
+    {
+        FrE newElem = new FrE(u0, u1, u2, u3);
+        ToMont(in newElem, out FrE res);
+        return res;
+    }
+
+    public static FrE SetElement(BigInteger value)
+    {
+        FrE newElem = new FrE(value);
+        ToMont(in newElem, out FrE res);
+        return res;
     }
 
     public FrE Neg()
