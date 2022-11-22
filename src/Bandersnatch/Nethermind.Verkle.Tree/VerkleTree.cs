@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using Nethermind.Field;
 using Nethermind.Verkle.Curve;
 using Nethermind.Verkle.Db;
+using Nethermind.Verkle.Tree.VerkleNodes;
 using Nethermind.Verkle.Utils;
 
 namespace Nethermind.Verkle.Tree;

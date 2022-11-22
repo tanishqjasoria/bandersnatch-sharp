@@ -3,7 +3,7 @@ using Nethermind.Field;
 using Nethermind.Verkle.Curve;
 using Nethermind.Verkle.Utils;
 
-namespace Nethermind.Verkle.Tree;
+namespace Nethermind.Verkle.Tree.VerkleNodes;
 using Fr = FixedFiniteField<BandersnatchScalarFieldStruct>;
 
 public enum NodeType : byte
