@@ -97,6 +97,7 @@ public readonly struct FpE
         this.u1 = u1;
         this.u2 = u2;
         this.u3 = u3;
+        ToMont(in this, out this);
     }
 
     public FpE(in ReadOnlySpan<byte> bytes, bool isBigEndian = false)
@@ -127,6 +128,7 @@ public readonly struct FpE
         u1 = res.u1;
         u2 = res.u2;
         u3 = res.u3;
+        ToMont(in this, out this);
     }
 
     public FpE Neg()
