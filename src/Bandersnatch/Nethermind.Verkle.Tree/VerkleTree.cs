@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using Nethermind.Field.Montgomery;
 using Nethermind.Verkle.Curve;
 using Nethermind.Verkle.Db;
+using Nethermind.Verkle.Tree.VerkleStateDb;
 using Nethermind.Verkle.Utils;
 
 namespace Nethermind.Verkle.Tree;
@@ -225,6 +226,16 @@ public class VerkleTree
         Banderwagon leafDeltaCommitment = GetLeafDelta(oldValue, value, key[31]);
         _stateDb.SetLeaf(key, value);
         return leafDeltaCommitment;
+    }
+
+    public IVerkleDiffDb GetForwardMergedDiff(long fromBlock, long toBlock)
+    {
+        return _stateDb.GetForwardMergedDiff(fromBlock, toBlock);
+    }
+
+    public IVerkleDiffDb GetReverseMergedDiff(long fromBlock, long toBlock)
+    {
+        return _stateDb.GetReverseMergedDiff(fromBlock, toBlock);
     }
 
     public void Flush(long blockNumber)
